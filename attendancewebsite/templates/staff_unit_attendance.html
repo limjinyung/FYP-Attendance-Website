@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h4>Unit Attendance Page</h4>
+
+    <br>
+
+    <form method="POST">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" name="search_uid" placeholder="Enter Unit Code">
+          <div class="input-group-append">
+            <button class="btn btn-outline-info" type="submit" onclick="searchStudentAttendance()">Search</button>
+          </div>
+        </div>
+    </form>
+
+    <br>
+
+
+    <canvas id="unit-chart" style="width:1000px; height=1400px"></canvas>
+
+    <br>
+
+    <div class="col-md-6">
+        <table class="table table-hover table-bordered">
+          <thead>
+            <div class="alert alert-secondary" role="alert">
+              {{ uid }} Attendance Percentage
+            </div>
+            <tr>
+              <th scope="col">Week</th>
+              <th scope="col">Percentage (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for table_key in unit_attendance_percentage %}
+            <tr>
+              {% if unit_attendance_percentage[table_key] < 50 %}
+                  <td class="table-danger">{{ table_key }}</td>
+                  <td class="table-danger">{{ unit_attendance_percentage[table_key] }}</td>
+              {% elif unit_attendance_percentage[table_key] == 100 %}
+                  <td class="table-success">{{ table_key }}</td>
+                  <td class="table-success">{{ unit_attendance_percentage[table_key] }}</td>
+              {% else %}
+                  <td class="table-primary">{{ table_key }}</td>
+                  <td class="table-primary">{{ unit_attendance_percentage[table_key] }}</td>
+              {% endif %}
+            </tr>
+          </tbody>
+          {% endfor %}
+        </table>
+    </div>
+
+    <br>
+
+    <script>
+
+    // Python variable
+    var unit_attendance_dict = {{ unit_attendance_percentage|tojson }};
+    var week_list = {{ week_list|tojson }}
+    var unit_name = {{ uid|tojson }}
+
+        if(unit_name === ""){
+            chart_name = ""
+        }else{
+            chart_name = unit_name.concat(" attendance percentage")
+        }
+
+    var unit_attendance = Object.values(unit_attendance_dict)
+
+    console.log(unit_attendance);
+    console.log(week_list);
+
+    new Chart(document.getElementById("unit-chart"), {
+      type: 'line',
+      data: {
+        labels: week_list,
+        datasets: [{
+            data: unit_attendance,
+            label: "Unit Percentage",
+            borderColor: "#3e95cd",
+            fill: false,
+            lineTension: 0.1
+          }]
+      },
+      options: {
+        title: {
+          display: true,
+          text: chart_name
+        },
+        scales : {
+                yAxes: [{
+                    ticks: {
+                        max: 100
+                    },
+                    scaleLabel: {
+								display: true,
+								labelString: 'Percentage'
+					}
+                }],
+                xAxes: [{
+                    scaleLabel: {
+								display: true,
+								labelString: 'Weeks'
+					}
+                }]
+        }
+      }
+    });
+
+    </script>
+
+{% endblock content %}

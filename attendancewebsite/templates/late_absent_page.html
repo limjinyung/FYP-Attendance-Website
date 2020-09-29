@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h4>Late / Absent Page</h4>
+
+    <br>
+
+    <form method="POST">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" name="search_sid" placeholder="Student ID">
+          <input type="text" class="form-control" name="search_uid" placeholder="Unit Code">
+        </div>
+        <div class="input-group-append">
+            <button class="btn btn-outline-info" type="submit">Search</button>
+        </div>
+    </form>
+
+    <br>
+
+
+{% endblock content %}

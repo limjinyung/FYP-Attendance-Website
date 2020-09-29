@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h4>Student Attendance Page</h4>
+
+    <br>
+
+    <form method="POST">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" name="search_sid" placeholder="Enter Student's ID">
+          <div class="input-group-append">
+            <button class="btn btn-outline-info" type="submit" onclick="searchStudentAttendance()">Search</button>
+          </div>
+        </div>
+    </form>
+
+    <br>
+
+    <canvas id="checkStudentAttendanceChart" style="width:1000px; height=1400px"></canvas>
+
+    <br>
+
+     <div class="col-md-6">
+        <table class="table table-hover table-bordered">
+          <thead>
+            <div class="alert alert-secondary" role="alert">
+              {{ student_details_id }} {{ student_details_ln }} {{ student_details_fn }}
+            </div>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Percentage (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for table_key in student_attendance_dict %}
+            <tr>
+              {% if student_attendance_dict[table_key] < 50 %}
+                  <td class="table-danger">{{ table_key }}</td>
+                  <td class="table-danger">{{ student_attendance_dict[table_key] }}</td>
+              {% elif student_attendance_dict[table_key] == 100 %}
+                  <td class="table-success">{{ table_key }}</td>
+                  <td class="table-success">{{ student_attendance_dict[table_key] }}</td>
+              {% else %}
+                  <td class="table-primary">{{ table_key }}</td>
+                  <td class="table-primary">{{ student_attendance_dict[table_key] }}</td>
+              {% endif %}
+            </tr>
+          </tbody>
+          {% endfor %}
+        </table>
+    </div>
+
+    <br>
+
+    <script>
+
+        // Python variable
+        var student_attendance = {{ student_attendance_dict|tojson }};
+
+        var unit_list = Object.keys(student_attendance)
+        var attendance_percentage = Object.values(student_attendance)
+
+        var attendance_list = student_attendance;
+
+        // Random colour generator
+        function getRandomColor(listLength) {
+          var letters = '0123456789ABCDEF';
+          var color = '#';
+          var colourList = [];
+          for(var j = 0; j < listLength; j++){
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            colourList.push(color);
+          }
+
+          return colourList;
+        }
+
+        function colourList(requestLength){
+            var color = new Array();
+            var cList = ['#003f5c','#2f4b7c','#665191','#a05195','#d45087','#f95d6a','#ff7c43','#ffa600'];
+
+            for(i=0; i<requestLength; i++){
+                console.log(color + ',');
+                color += cList[i] + ',';
+            }
+            return color;
+        }
+
+        // Global parameters:
+        // do not resize the chart canvas when its container does (keep at 600x400px)
+        Chart.defaults.global.responsive = false;
+
+        // initialize array data to hold multiple data
+        const dataArray = new Array();
+
+        // define the chart data
+        var chartData = {
+          label: unit_list,
+          data : attendance_percentage
+        };
+
+        // data to pass into chart
+        const attendanceData = {
+            labels : unit_list,
+            datasets: dataArray
+        }
+        console.log(attendanceData.labels);
+        console.log(attendanceData.datasets);
+
+        var ctx = document.getElementById("checkStudentAttendanceChart").getContext("2d");
+        var checkStudentAttendanceChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: unit_list,
+            datasets: [{
+                data: attendance_percentage,
+                backgroundColor: ['#003f5c','#2f4b7c','#665191','#a05195','#d45087','#f95d6a','#ff7c43','#ffa600'],
+              }]
+          },
+          options: {
+            legend:{
+                display:false
+            },
+            title:{
+                display: true,
+                text: 'Student Attendance Data'
+            },
+            scales: {
+              yAxes: [{
+                ticks: {
+                  beginAtZero: true
+                },
+                scaleLabel: {
+								display: true,
+								labelString: 'Percentage'
+				}
+              }],
+              xAxes: [{
+                    scaleLabel: {
+								display: true,
+								labelString: 'Units'
+					}
+              }]
+            }
+          }
+        });
+
+    </script>
+
+{% endblock content %}

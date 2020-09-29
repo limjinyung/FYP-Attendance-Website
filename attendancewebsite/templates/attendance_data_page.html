@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h4>Attendance Data Page</h4>
+
+    <br>
+
+    <form method="POST">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" name="search_sid" placeholder="Enter Student's ID">
+          <div class="input-group-append">
+            <button class="btn btn-outline-info" type="submit" onclick="searchStudentAttendance()">Search</button>
+          </div>
+        </div>
+    </form>
+
+    <br>
+
+    {% for unit in units %}
+    <option value= "{{unit}}" SELECTED>{{units}}</option>
+    {% endfor %}
+
+{% endblock content %}

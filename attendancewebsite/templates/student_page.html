@@ -1,0 +1,156 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h4>Student Page</h4>
+
+    <canvas id="studentChart" style="width:1000px; height=1400px"></canvas>
+
+    <br>
+
+    <div class="col-md-6">
+        <table class="table table-hover table-bordered">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Percentage (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for table_key in table %}
+            <tr>
+              {% if table[table_key] < 50 %}
+                  <td class="table-danger">{{ table_key }}</td>
+                  <td class="table-danger">{{ table[table_key] }}</td>
+              {% elif table[table_key] == 100 %}
+                  <td class="table-success">{{ table_key }}</td>
+                  <td class="table-success">{{ table[table_key] }}</td>
+              {% else %}
+                  <td class="table-primary">{{ table_key }}</td>
+                  <td class="table-primary">{{ table[table_key] }}</td>
+              {% endif %}
+            </tr>
+          </tbody>
+          {% endfor %}
+        </table>
+    </div>
+
+    <br>
+
+    <form method="POST">
+        {% for choice in choices %}
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" id="unitCheckBox" name="choose_unit" value="{{ choice }}" autocomplete="off" checked="checked">
+          <label class="form-check-label" for="unitCheckBox">{{ choice }}</label>
+        </div>
+        {% endfor %}
+        <button class="btn btn-sm btn-outline-info">Submit</button>
+    </form>
+
+    <br>
+
+    <script>
+
+        // Python variable
+        var data_from_python = {{ python_dict|tojson }};
+        var weeks = {{ weeks|tojson }};
+
+        var unit_list = Object.keys(data_from_python)
+        var attendance_percentage = Object.values(data_from_python)
+
+        var attendance_list = data_from_python;
+
+        var colourCount = -1;
+
+        // Random colour generator
+        function getRandomColor() {
+          var letters = '0123456789ABCDEF';
+          var color = '#';
+          for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+          }
+          return color;
+        }
+
+        function colourList(){
+            var color = '';
+            var cList = ['#003f5c','#2f4b7c','#665191','#a05195','#d45087','#f95d6a','#ff7c43','#ffa600'];
+
+            colourCount = colourCount+1;
+            return cList[colourCount];
+            }
+
+        // Global parameters:
+        // do not resize the chart canvas when its container does (keep at 600x400px)
+        Chart.defaults.global.responsive = false;
+
+        // initialize array data to hold multiple data
+        const dataArray = new Array();
+
+        // define the chart data
+        for(var key in data_from_python){
+            var randomColour = getRandomColor();
+            var chartData = {
+                      label: key,
+                      fill: false,
+                      lineTension: 0.1,
+                      borderColor: colourList(),
+                      data : data_from_python[key],
+            };
+            dataArray.push(chartData)
+        }
+
+        // data to pass into chart
+        const attendanceData = {
+            labels : weeks,
+            datasets: dataArray
+        }
+
+        console.log(attendanceData);
+
+        // get chart canvas
+        var ctx = document.getElementById("studentChart").getContext("2d");
+
+        // create the chart using the chart canvas
+        var studentChart = new Chart(ctx, {
+          type: 'line',
+          data: attendanceData,
+          options : {
+            scales : {
+                yAxes: [{
+                    ticks: {
+                        max: 100
+                    },
+                    scaleLabel: {
+								display: true,
+								labelString: 'Percentage'
+					}
+                }],
+                xAxes: [{
+                    scaleLabel: {
+								display: true,
+								labelString: 'Weeks'
+					}
+                }]
+            }
+          }
+        });
+
+        function checkUnitCheckbox(unit){
+
+            var unit_list = Object.keys(data_from_python)
+
+            if (unit_list.includes(unit)){
+                return true;
+            }
+            return false;
+        }
+
+        var checkbox = document.querySelectorAll("input[name='choose_unit']");
+
+        checkbox.forEach(e => checkUnitCheckbox(e.value) ? e.checked=true : e.checked=false);
+
+
+    </script>
+
+    <script src="{{url_for('static', filename='student_page.js')}}"></script>
+
+{% endblock content %}
