@@ -103,7 +103,6 @@ def student_page():
             flash('Please at least tick one unit!', 'danger')
         choose_units = get_unit(attendance_list)
         attendance_list = extract_units(attendance_list, selected_units)
-        print(attendance_list, selected_units)
     # else if the request method is GET
     # query all unit value
     else:
@@ -140,7 +139,7 @@ def student_attendance_data_page():
 
     table_data = extract_student_id(attendance_list)
 
-    return render_template('student_attendance_data_page.html', title='Student Page', table=table_data)
+    return render_template('student_attendance_data_page.html', title='Attendance Data Page', table=table_data)
 
 
 @app.route('/student_download_attendance', methods=['POST'])
@@ -159,7 +158,7 @@ def download_student_csv():
 
 @app.route('/staff_page', methods=['GET', 'POST'])
 def staff_page():
-    return render_template('staff_page.html', title='Student Page')
+    return render_template('staff_page.html', title='Staff Page')
 
 
 @app.route('/staff_student_attendance', methods=['GET', 'POST'])
@@ -168,11 +167,16 @@ def staff_student_attendance():
     if request.method == "POST":
         sid = request.form.get("search_sid")
 
-        # get the student details
-        student_details = db.session.query(Student).filter(Student.student_id == sid).first()
-        student_details_id = student_details.student_id
-        student_details_first_name = student_details.first_name
-        student_details_last_name = student_details.last_name
+        try:
+            # get the student details
+            student_details = db.session.query(Student).filter(Student.student_id == sid).first()
+            student_details_id = student_details.student_id
+            student_details_first_name = student_details.first_name
+            student_details_last_name = student_details.last_name
+        except AttributeError:
+            flash('Please enter a valid student id', 'danger')
+            return render_template('staff_student_attendance.html',
+                                   title='Student Attendance Page', student_attendance_dict={})
 
         # get the attendance of the student
         attendance_list = db.session.query(attendance).filter(attendance.c.student_id == sid). \

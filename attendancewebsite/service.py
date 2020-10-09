@@ -1,13 +1,6 @@
 from attendancewebsite import db
 from attendancewebsite.models import Semester, student_unit
 from datetime import datetime, timedelta
-import pyowm
-
-owm = pyowm.OWM('38a7ee6448c1e85e81a48536316502db')
-mgr = owm.weather_manager()
-observation = mgr.weather_at_place('Kuala Lumpur, Malaysia')
-w = observation.weather
-print(w)
 
 start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.desc()).first()
 this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()

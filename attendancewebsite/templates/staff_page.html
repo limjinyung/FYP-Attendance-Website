@@ -1,4 +1,54 @@
 {% extends "layout.html" %}
 {% block content %}
     <h4>Staff Page</h4>
+
+    <br>
+
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="card" style="margin-top:10px;margin-bottom:10px">
+          <div class="card-body">
+            <h5 class="card-title">Student Attendance</h5>
+            <p class="card-text">Key in a student's ID and check the student's attendance data throughout the semester.</p>
+            <a href="/staff_student_attendance" class="btn btn-outline-info">Student Attendance Page</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card" style="margin-top:10px;margin-bottom:10px">
+          <div class="card-body">
+            <h5 class="card-title">Unit Attendance</h5>
+            <p class="card-text">Key in a unit code and check the unit's every week attendance percentage throughout the semester.</p>
+            <a href="staff_unit_attendance" class="btn btn-outline-info">Unit Attendance Page</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card" style="margin-top:10px;margin-bottom:10px">
+          <div class="card-body">
+            <h5 class="card-title">Late/Absent Attendance</h5>
+            <p class="card-text">Check a student's attendance performance in a specific unit throughout the semester.</p>
+            <a href="/late_absent_page" class="btn btn-outline-info">Late/Absent Attendance Page</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card" style="margin-top:10px;margin-bottom:10px">
+          <div class="card-body">
+            <h5 class="card-title">Attendance Data</h5>
+            <p class="card-text">Download a student's attendance data for all of the student's unit in csv format.</p>
+            <a href="/late_absent_page" class="btn btn-outline-info">Attendance Data Page</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card" style="margin-top:10px;margin-bottom:10px">
+          <div class="card-body">
+            <h5 class="card-title">Attendance Analysis</h5>
+            <p class="card-text">Wanna know why the class have such low attendance? Click in and check out why.</p>
+            <a href="#" class="btn btn-outline-info">Attendance Analysis Page</a>
+          </div>
+        </div>
+      </div>
+    </div>
 {% endblock content %}

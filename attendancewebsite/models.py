@@ -84,6 +84,10 @@ class Semester(db.Model):
     def __repr__(self):
         return "Semester('" + self.year + ', ' + self.semester + ',' + str(self.start_date) + "')"
 
+
+# class Event(db.Model):
+    
+
 # Association tables
 
 
