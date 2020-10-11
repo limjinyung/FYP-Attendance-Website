@@ -48,7 +48,9 @@ def student_register():
     form = StudentRegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        student = Student(student_id=form.student_id.data, first_name=form.first_name.data, last_name=form.last_name.data, email=form.email.data, DOB=form.DOB.data, password=hashed_password)
+        student = Student(student_id=form.student_id.data, first_name=form.first_name.data,
+                          last_name=form.last_name.data, email=form.email.data,
+                          DOB=form.DOB.data, password=hashed_password, uid=form.uid.data)
         db.session.add(student)
         db.session.commit()
         flash('Your account has been created! You are now able to log in', 'success')

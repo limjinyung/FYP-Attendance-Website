@@ -2,8 +2,6 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, DateField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from attendancewebsite.models import Student, Staff
-from attendancewebsite import db
-from flask_login import current_user
 
 
 class StudentRegistrationForm(FlaskForm):
@@ -14,6 +12,7 @@ class StudentRegistrationForm(FlaskForm):
     DOB = DateField("Date of Birth", format='%d/%m/%Y', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    uid = StringField('Student Card ID', validators=[DataRequired()])
     submit = SubmitField('Register')
 
     def validate_id(self, student_id):

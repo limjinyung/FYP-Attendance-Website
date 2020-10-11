@@ -1,5 +1,6 @@
 from attendancewebsite import db, login_manager
 from flask_login import UserMixin
+from datetime import datetime
 
 
 @login_manager.user_loader
@@ -19,11 +20,12 @@ def load_user(user_id):
 
 class Student(db.Model, UserMixin):
     student_id = db.Column(db.String(8), primary_key=True)
-    first_name = db.Column(db.String(20), unique=True, nullable=False)
-    last_name = db.Column(db.String(20), unique=True, nullable=False)
+    first_name = db.Column(db.String(20), nullable=False)
+    last_name = db.Column(db.String(20), nullable=False)
     DOB = db.Column(db.Date, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    uid = db.Column(db.String(20), unique=True, nullable=False)
 
     def __repr__(self):
         return "Student('" + str(self.student_id) + ', ' + self.last_name + ', ' + self.first_name + ', ' + self.email + "')"
@@ -34,8 +36,8 @@ class Student(db.Model, UserMixin):
 
 class Staff(db.Model, UserMixin):
     staff_id = db.Column(db.String(8), primary_key=True)
-    first_name = db.Column(db.String(20), unique=True, nullable=False)
-    last_name = db.Column(db.String(20), unique=True, nullable=False)
+    first_name = db.Column(db.String(20), nullable=False)
+    last_name = db.Column(db.String(20), nullable=False)
     DOB = db.Column(db.Date, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
@@ -85,8 +87,28 @@ class Semester(db.Model):
         return "Semester('" + self.year + ', ' + self.semester + ',' + str(self.start_date) + "')"
 
 
-# class Event(db.Model):
-    
+class Event(db.Model):
+    event_code = db.Column(db.String(30), primary_key=True, nullable=False)
+    event_name = db.Column(db.String(30), nullable=False)
+    event_datetime = db.Column(db.DateTime, nullable=False)
+    event_duration = db.Column(db.Integer, nullable=False)
+
+
+class Club(db.Model):
+    club_code = db.Column(db.String(30), primary_key=True, nullable=False)
+    club_name = db.Column(db.String(30), nullable=False)
+    club_datetime = db.Column(db.DateTime, nullable=False)
+    club_duration = db.Column(db.Integer, nullable=False)
+
+
+class Weather(db.Model):
+    unit_code = db.Column(db.String(20), primary_key=True)
+    week = db.Column(db.Integer, primary_key=True)
+    class_datetime = db.Column(db.DateTime, nullable=False)
+    year = db.Column(db.String(10), primary_key=True)
+    semester = db.Column(db.String(1), primary_key=True)
+    weather = db.Column(db.String(10), nullable=False)
+
 
 # Association tables
 
@@ -124,3 +146,14 @@ room_unit = db.Table('room_unit',
             db.Column('day', db.String(10), primary_key=True),
 )
 
+
+student_event = db.Table('student_event',
+            db.Column('student_id', db.String(8), db.ForeignKey('student.student_id'), primary_key=True),
+            db.Column('event_code', db.String(30), db.ForeignKey('event.event_code'), primary_key=True),
+)
+
+
+student_club = db.Table('student_club',
+            db.Column('student_id', db.String(8), db.ForeignKey('student.student_id'), primary_key=True),
+            db.Column('club_code', db.String(30), db.ForeignKey('club.club_code'), primary_key=True),
+)

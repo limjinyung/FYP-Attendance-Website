@@ -1,5 +1,5 @@
 from attendancewebsite import db
-from attendancewebsite.models import Semester, student_unit
+from attendancewebsite.models import Semester, student_unit, attendance
 from datetime import datetime, timedelta
 
 start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.desc()).first()
