@@ -6,6 +6,9 @@ start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.
 this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()
 this_semester = db.session.query(Semester.semester).order_by(Semester.start_date.desc()).first()
 start_week = datetime.strptime(start_week[0], '%Y-%m-%d').date()
+# start_week = "2020-08-03"
+# this_year = "2020"
+# this_semester = "2"
 week_length = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
 

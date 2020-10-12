@@ -88,16 +88,18 @@ class Semester(db.Model):
 
 
 class Event(db.Model):
-    event_code = db.Column(db.String(30), primary_key=True, nullable=False)
-    event_name = db.Column(db.String(30), nullable=False)
-    event_datetime = db.Column(db.DateTime, nullable=False)
+    event_code = db.Column(db.String(30), primary_key=True, unique=True, nullable=False)
+    event_name = db.Column(db.String(30), primary_key=True, nullable=False)
+    event_start_time = db.Column(db.Time, primary_key=True, nullable=False)
+    day = db.Column(db.String(10), primary_key=True, nullable=False)
     event_duration = db.Column(db.Integer, nullable=False)
 
 
 class Club(db.Model):
-    club_code = db.Column(db.String(30), primary_key=True, nullable=False)
-    club_name = db.Column(db.String(30), nullable=False)
-    club_datetime = db.Column(db.DateTime, nullable=False)
+    club_code = db.Column(db.String(30), primary_key=True, unique=True, nullable=False)
+    club_name = db.Column(db.String(30), primary_key=True, nullable=False)
+    club_start_time = db.Column(db.Time, primary_key=True, nullable=False)
+    day = db.Column(db.String(10), primary_key=True, nullable=False)
     club_duration = db.Column(db.Integer, nullable=False)
 
 
