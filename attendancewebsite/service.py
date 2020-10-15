@@ -199,3 +199,43 @@ def extract_student_id(attendance_list):
         table_data.append(table_col)
 
     return table_data
+
+
+def calculate_late_data(week_list, attendance_list):
+
+    late_attendance = []
+
+    for check_attendance in attendance_list:
+        late_bool = check_attendance[6]
+        if late_bool:
+            late_attendance.append([check_attendance[2], check_attendance[3].strftime("%m/%d/%Y, %H:%M:%S")
+                  ,check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
+
+    # calculate the late percentage
+    late_percentage = round((len(late_attendance)/len(week_list))*100, 2)
+
+    return late_percentage, late_attendance
+
+
+def calculate_absent_data(week_list, attendance_list):
+
+    # TODO: return a list of absent data
+    absent_attendance = []
+    present_week = []
+    absent_week = []
+
+    for attendance_week in attendance_list:
+        week_value = attendance_week[2]
+        present_week.append(week_value)
+
+    for check_week in week_list:
+        if check_week not in present_week:
+            absent_week.append(check_week)
+
+    absent_percentage = round(((len(absent_week))/len(week_list))*100 ,2)
+
+    return absent_percentage
+
+##########################################################
+### Attendance Analysis Algorithm
+##########################################################

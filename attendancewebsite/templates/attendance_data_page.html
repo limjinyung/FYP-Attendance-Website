@@ -15,8 +15,59 @@
 
     <br>
 
-    {% for unit in units %}
-    <option value= "{{unit}}" SELECTED>{{units}}</option>
-    {% endfor %}
+    {% if table_data %}
+    <ul class="list-group col-md-4">
+        <li class="list-group-item list-group-item-danger">Red Column indicates late attendance</li>
+    </ul>
+    {% endif %}
+
+    <br>
+
+    <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th scope="col">Unit</th>
+          <th scope="col">Week</th>
+          <th scope="col">Time In</th>
+          <th scope="col">Time Out</th>
+          <th scope="col">Late</th>
+          <th scope="col">Semester</th>
+          <th scope="col">Year</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for table_key in table_data %}
+        <tr>
+          {% if table_key[4] == True %}
+              <td class="table-danger">{{ table_key[0] }}</td>
+              <td class="table-danger">{{ table_key[1] }}</td>
+              <td class="table-danger">{{ table_key[2] }}</td>
+              <td class="table-danger">{{ table_key[3] }}</td>
+              <td class="table-danger">{{ table_key[4] }}</td>
+              <td class="table-danger">{{ table_key[5] }}</td>
+              <td class="table-danger">{{ table_key[6] }}</td>
+          {% else %}
+              <td>{{ table_key[0] }}</td>
+              <td>{{ table_key[1] }}</td>
+              <td>{{ table_key[2] }}</td>
+              <td>{{ table_key[3] }}</td>
+              <td>{{ table_key[4] }}</td>
+              <td>{{ table_key[5] }}</td>
+              <td>{{ table_key[6] }}</td>
+          {% endif %}
+        </tr>
+      </tbody>
+      {% endfor %}
+    </table>
+
+    <br>
+
+    {% if student_id %}
+    <form action="/staff_download_attendance/{{student_id}}" method="POST">
+        <button class="btn btn-outline-success" type="submit" value="Download Attendance Data">Download Attendance List</button>
+    </form>
+    {% endif %}
+
+    <br>
 
 {% endblock content %}

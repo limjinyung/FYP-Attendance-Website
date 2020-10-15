@@ -77,6 +77,7 @@ class Semester(db.Model):
     year = db.Column(db.String(10), primary_key=True)
     semester = db.Column(db.String(1), primary_key=True)
     start_date = db.Column(db.String(10), primary_key=True)
+    week_before_sembreak = db.Column(db.Integer)
 
     def __init__(self, year, semester,  start_date):
         self.year = year
@@ -85,14 +86,6 @@ class Semester(db.Model):
 
     def __repr__(self):
         return "Semester('" + self.year + ', ' + self.semester + ',' + str(self.start_date) + "')"
-
-
-class Event(db.Model):
-    event_code = db.Column(db.String(30), primary_key=True, unique=True, nullable=False)
-    event_name = db.Column(db.String(30), primary_key=True, nullable=False)
-    event_start_time = db.Column(db.Time, primary_key=True, nullable=False)
-    day = db.Column(db.String(10), primary_key=True, nullable=False)
-    event_duration = db.Column(db.Integer, nullable=False)
 
 
 class Club(db.Model):
@@ -147,13 +140,6 @@ room_unit = db.Table('room_unit',
             db.Column('class_duration', db.Integer),
             db.Column('day', db.String(10), primary_key=True),
 )
-
-
-student_event = db.Table('student_event',
-            db.Column('student_id', db.String(8), db.ForeignKey('student.student_id'), primary_key=True),
-            db.Column('event_code', db.String(30), db.ForeignKey('event.event_code'), primary_key=True),
-)
-
 
 student_club = db.Table('student_club',
             db.Column('student_id', db.String(8), db.ForeignKey('student.student_id'), primary_key=True),

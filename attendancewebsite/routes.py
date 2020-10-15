@@ -7,7 +7,9 @@ from io import StringIO
 import csv
 from attendancewebsite.service import get_unit, create_attendance_sheet, generate_attendance_total_percentage, \
     generate_attendance_percentage, sort_unit, extract_units, calculate_unit_attendance, this_year, this_semester, \
-    extract_student_id
+    extract_student_id, calculate_absent_data, calculate_late_data
+
+week_length = 12
 
 
 @app.route("/login", methods=['GET', 'POST'])
@@ -101,7 +103,7 @@ def student_page():
     # get the value from checkbox and query the database
     if request.method == "POST":
         selected_units = request.form.getlist("choose_unit")
-        if selected_units == []:
+        if not selected_units:
             flash('Please at least tick one unit!', 'danger')
         choose_units = get_unit(attendance_list)
         attendance_list = extract_units(attendance_list, selected_units)
@@ -151,9 +153,10 @@ def download_student_csv():
             attendance.c.student_id == current_user.student_id).all()
         si = StringIO()
         cw = csv.writer(si)
+        cw.writerow([('Student ID'), ('Unit'), ('Week'), ('Time In'), ('Time Out'), ('Late'), ('Year'), ('Semester')])
         cw.writerows(attendance_list)
         output = make_response(si.getvalue())
-        output.headers["Content-Disposition"] = "attachment; filename=attendance_list.csv"
+        output.headers["Content-Disposition"] = "attachment; filename=" + str(current_user.student_id) + "_attendance_list.csv"
         output.headers["Content-type"] = "text/csv"
         return output
 
@@ -254,41 +257,6 @@ def staff_unit_attendance():
                                unit_attendance_percentage={}, week_list=attendance_sheet[1], uid="")
 
 
-def calculate_late_data(week_list, attendance_list):
-
-    late_attendance = []
-
-    for check_attendance in attendance_list:
-        late_bool = check_attendance[6]
-        if late_bool:
-            late_attendance.append([check_attendance[2], check_attendance[3].strftime("%m/%d/%Y, %H:%M:%S")
-                  ,check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
-
-    # calculate the late percentage
-    late_percentage = round((len(late_attendance)/len(week_list))*100, 2)
-
-    return late_percentage, late_attendance
-
-
-def calculate_absent_data(week_list, attendance_list):
-
-    # TODO: return a list of absent data
-    absent_attendance = []
-    present_week = []
-    absent_week = []
-
-    for attendance_week in attendance_list:
-        week_value = attendance_week[2]
-        present_week.append(week_value)
-
-    for check_week in week_list:
-        if check_week not in present_week:
-            absent_week.append(check_week)
-
-    absent_percentage = round((len(absent_week)/len(week_list))*100 ,2)
-
-    return absent_percentage
-
 
 @app.route('/late_absent_page', methods=['GET', 'POST'])
 def late_absent_page():
@@ -338,6 +306,21 @@ def late_absent_page():
                            student_name="", unit_name="")
 
 
+@app.route('/staff_download_attendance/<student_id>', methods=['POST'])
+def staff_page_download_student_csv(student_id):
+    if request.method == 'POST':
+        attendance_list = db.session.query(attendance).filter(
+            attendance.c.student_id == student_id).all()
+        si = StringIO()
+        cw = csv.writer(si)
+        cw.writerow([('Student ID'), ('Unit'), ('Week'), ('Time In'), ('Time Out'), ('Late'), ('Year'), ('Semester')])
+        cw.writerows(attendance_list)
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = "attachment; filename=" + str(student_id) + "_attendance_list.csv"
+        output.headers["Content-type"] = "text/csv"
+        return output
+
+
 @app.route('/attendance_data_page', methods=['GET', 'POST'])
 def attendance_data_page():
 
@@ -346,19 +329,33 @@ def attendance_data_page():
 
         # get the student details
         student_details = db.session.query(Student).filter(Student.student_id == sid).first()
-        student_details_id = student_details.student_id
-        student_details_first_name = student_details.first_name
-        student_details_last_name = student_details.last_name
+
+        if not student_details:
+            flash("Please enter a valid student ID", "danger")
+            return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=""
+                                   , student_id="", table_data={})
+
+        student_id = student_details.student_id
+        student_name = student_details.last_name + " " + student_details.first_name
 
         # get the attendance of the student
         attendance_list = db.session.query(attendance).filter(attendance.c.student_id == sid). \
             filter(attendance.c.year == this_year). \
             filter(attendance.c.semester == this_semester).all()
 
-        # get the student's unit list, e.g. ['FIT3091_L1', 'FIT3155_T2']
-        student_unit_list = get_unit(attendance_list)
+        table_data = extract_student_id(attendance_list)
 
-    return render_template('attendance_data_page.html', title='Attendance Data Page')
+        if not attendance_list:
+            flash("This student is not taking any unit. For any assistanec please contact the administration.", "danger")
+            return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=""
+                                   , student_id="", table_data={})
+
+        else:
+            return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=student_name
+                               , student_id=student_id, table_data=table_data)
+
+    return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=""
+                               , student_id="", table_data={})
 
 
 @app.route("/logout")
