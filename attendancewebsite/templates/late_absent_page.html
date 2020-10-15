@@ -16,5 +16,117 @@
 
     <br>
 
+    <canvas id="lateAbsentChart" style="margin-left:auto; margin-right:auto; position: relative; height:50vh; width:90vw"></canvas>
+
+    <br>
+    <br>
+
+    <div class="col-md-6" style="padding-left:0px">
+        <table class="table table-hover table-bordered">
+          <thead>
+            <div class="alert alert-secondary" role="alert">
+                {% if student_name == "" and unit_name == "" %}
+                    late/absent attendance table
+                {% else %}
+                    {{ student_name }}'s late and absent percentage in {{ unit_name }}
+                {% endif %}
+            </div>
+            <tr>
+              <th scope="col">Late Percentage</th>
+              <th scope="col">Absent Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {% if late_data == [] and absent_data == [] %}
+                  <td></td>
+                  <td></td>
+              {% else %}
+                  {% if late_data[0] > 50 %}
+                    <td class="table-danger">{{ late_data[0] }}%</td>
+                  {% else %}
+                    <td>{{ late_data[0] }}%</td>
+                  {% endif %}
+                  {% if absent_data > 50 %}
+                    <td class="table-danger">{{ absent_data }}%</td>
+                  {% else %}
+                    <td>{{ absent_data }}%</td>
+                  {% endif %}
+              {% endif %}
+            </tr>
+          </tbody>
+        </table>
+    </div>
+
+    <div>
+        <table class="table table-hover table-bordered">
+          <thead>
+            <div class="alert alert-secondary" role="alert">
+                {% if student_name == "" and unit_name == "" %}
+                    late attendance report
+                {% else %}
+                    {{ student_name }}'s Late Attendance Report
+                {% endif %}
+            </div>
+            <tr>
+              <th scope="col">Week</th>
+              <th scope="col">Time In</th>
+              <th scope="col">Time Out</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for late_table_data in late_data[1] %}
+            <tr>
+              <td>{{ late_table_data[0] }}</td>
+              <td>{{ late_table_data[1] }}</td>
+              <td>{{ late_table_data[2] }}</td>
+            </tr>
+          </tbody>
+          {% endfor %}
+        </table>
+    </div>
+
+
+    <script>
+        var late_data = {{ late_data|tojson }}
+        var absent_data = {{ absent_data|tojson }}
+
+        if (late_data.length == 0 && absent_data.length == 0){
+            console.log("showing none");
+            document.getElementById("lateAbsentChart").style.display = "none";
+            document.getElementsByClassName("table").style.display = "none";
+        }
+        else{
+
+            doughnutData = {
+                datasets: [{
+                    data: [late_data[0], absent_data],
+                    backgroundColor: [
+                    "#FF6384",
+                    "#36A2EB"
+                    ],
+                    hoverBorderColor: [
+                                        "#eee","#eee"
+                    ]
+                }],
+                labels:[
+                    'Late',
+                    'Absent'
+                ],
+            }
+
+            new Chart(document.getElementById("lateAbsentChart"),{
+                type: 'doughnut',
+                data: doughnutData,
+                options:{
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+
+        }
+
+    </script>
+
 
 {% endblock content %}

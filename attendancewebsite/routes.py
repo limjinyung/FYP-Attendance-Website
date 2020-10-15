@@ -216,6 +216,7 @@ def staff_unit_attendance():
 
     if request.method == "POST":
         uid = request.form.get("search_uid")
+        uid = uid.upper()
 
         # get the attendance of the unit
         attendance_list = db.session.query(attendance).filter(attendance.c.unit_code == uid). \
@@ -224,7 +225,9 @@ def staff_unit_attendance():
 
         if attendance_list:
 
-            unit_attendance_percentage = calculate_unit_attendance(attendance_list, uid)
+            unit_attendance_percentage_unsorted = calculate_unit_attendance(attendance_list, uid)
+
+            unit_attendance_percentage = {k: unit_attendance_percentage_unsorted[k] for k in sorted(unit_attendance_percentage_unsorted)}
 
             # get the week list, e.g. [1,2,3,4...]
             attendance_sheet = create_attendance_sheet()
@@ -251,12 +254,48 @@ def staff_unit_attendance():
                                unit_attendance_percentage={}, week_list=attendance_sheet[1], uid="")
 
 
+def calculate_late_data(week_list, attendance_list):
+
+    late_attendance = []
+
+    for check_attendance in attendance_list:
+        late_bool = check_attendance[6]
+        if late_bool:
+            late_attendance.append([check_attendance[2], check_attendance[3].strftime("%m/%d/%Y, %H:%M:%S")
+                  ,check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
+
+    # calculate the late percentage
+    late_percentage = round((len(late_attendance)/len(week_list))*100, 2)
+
+    return late_percentage, late_attendance
+
+
+def calculate_absent_data(week_list, attendance_list):
+
+    # TODO: return a list of absent data
+    absent_attendance = []
+    present_week = []
+    absent_week = []
+
+    for attendance_week in attendance_list:
+        week_value = attendance_week[2]
+        present_week.append(week_value)
+
+    for check_week in week_list:
+        if check_week not in present_week:
+            absent_week.append(check_week)
+
+    absent_percentage = round((len(absent_week)/len(week_list))*100 ,2)
+
+    return absent_percentage
+
+
 @app.route('/late_absent_page', methods=['GET', 'POST'])
 def late_absent_page():
 
     if request.method == "POST":
-        uid = request.form.get("search_uid")
-        sid = request.form.get("search_sid")
+        uid = request.form.get("search_uid").upper()
+        sid = request.form.get("search_sid").upper()
 
         if uid and sid:
             attendance_list = db.session.query(attendance).filter(attendance.c.unit_code == uid). \
@@ -264,18 +303,39 @@ def late_absent_page():
                 filter(attendance.c.year == this_year). \
                 filter(attendance.c.semester == this_semester).all()
 
-            print(attendance_list)
+            if not attendance_list:
+                flash("No information available. Please try again", "warning")
+                return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
+                                   student_name="", unit_name="")
+
+            query_student = db.session.query(Student).filter(Student.student_id == sid).first()
+            student_name = query_student.last_name + " " + query_student.first_name
+
+            # get the week list, e.g. [1,2,3,4...]
+            attendance_sheet = create_attendance_sheet()
+
+            late_data = calculate_late_data(attendance_sheet[0], attendance_list)
+            absent_data = calculate_absent_data(attendance_sheet[0], attendance_list)
+
+            return render_template('late_absent_page.html', title='Late Absent Page', late_data=late_data,
+                                   absent_data=absent_data, student_name=student_name, unit_name=uid)
+
         elif not uid and not sid:
             flash("Please enter full information", "danger")
-            return render_template('late_absent_page.html', title='Late Absent Page')
+            return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
+                                   student_name="", unit_name="")
         elif not sid:
             flash("Please enter student id", "danger")
-            return render_template('late_absent_page.html', title='Late Absent Page')
+            return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
+                                   student_name="", unit_name="")
         else:
             flash("Please enter unit code", "danger")
-            return render_template('late_absent_page.html', title='Late Absent Page')
+            return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
+                                   student_name="", unit_name="")
 
-    return render_template('late_absent_page.html', title='Late Absent Page')
+    flash("Please enter student ID and unit code", "info")
+    return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
+                           student_name="", unit_name="")
 
 
 @app.route('/attendance_data_page', methods=['GET', 'POST'])
