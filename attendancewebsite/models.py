@@ -102,7 +102,7 @@ class Weather(db.Model):
     class_datetime = db.Column(db.DateTime, nullable=False)
     year = db.Column(db.String(10), primary_key=True)
     semester = db.Column(db.String(1), primary_key=True)
-    weather = db.Column(db.String(10), nullable=False)
+    weather = db.Column(db.String(20), nullable=False)
 
 
 # Association tables

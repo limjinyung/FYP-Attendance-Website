@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h4>Attendance Analysis Page</h4>
+
+    <br>
+
+    <form method="POST">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" name="search_uid" placeholder="Enter Unit Code">
+          <div class="input-group-append">
+            <button class="btn btn-outline-info" type="submit" onclick="searchStudentAttendance()">Search</button>
+          </div>
+        </div>
+    </form>
+
+    <br>
+
+    <div class="alert alert-secondary text-center" role="alert">
+      Attendance Analysis for {{ uid }}
+    </div>
+
+    <br>
+
+    <div class="row">
+
+      <!-- First Card -->
+      <div class="col-md-6">
+      {% if class_time_analysis[0] == True %}
+        <div class="card border-danger" style="margin-bottom:2rem;">
+      {% else %}
+        <div class="card border-success" style="margin-bottom:2rem;">
+      {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">Class Time Analysis</h5>
+          {% if class_time_analysis[0] == True and class_time_analysis[1] != [] %}
+            <p class="card-text">Class time is too early/late for students. Click to see some available class time.</p>
+          {% elif class_time_analysis[0] == True and class_time_analysis[1] == [] %}
+            <p class="card-text">Class time is too early/late for students but there's not other class time available.</p>
+          {% else %}
+            <p class="card-text">Class time is good. It's not too early or too late for students.</p>
+          {% endif %}
+            {% if class_time_analysis[1] == [] %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassTime" disabled>
+                Available Time Slots
+              </button>
+            {% else %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassTime">
+                Available Time Slots
+              </button>
+            {% endif %}
+
+              <!-- Modal  for Class Time -->
+              <div class="modal fade" id="modalClassTime" tabindex="-1" aria-labelledby="modalClassTimeLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modalClassTimeLabel">Class Time Analysis</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Available Time Slots: {% for available_time in class_time_analysis[1] %} {{ available_time }}, {% endfor %}
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second Card -->
+      <div class="col-md-6">
+      {% if club_clash_analysis[0] == True %}
+        <div class="card border-danger" style="margin-bottom:2rem;">
+      {% elif club_clash_analysis[0] == False and club_clash_analysis[2] != [] %}
+        <div class="card border-warning" style="margin-bottom:2rem;">
+      {% else %}
+        <div class="card border-success" style="margin-bottom:2rem;">
+      {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">Club Clash Analysis</h5>
+          {% if (club_clash_analysis[0] == True) and (club_clash_analysis[1] != []) and (clubs != []) %}
+            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s). Click to see some other available class time</p>
+          {% elif (club_clash_analysis[0] == True) and (club_clash_analysis[2] == []) %}
+            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s) but there aren't any other class time available</p>
+          {% elif club_clash_analysis[0] == False and club_clash_analysis[2] != [] %}
+            <p class="card-text">There's club(s) clashed with your class but only a few student participated the club(s).</p>
+          {% else %}
+            <p class="card-text">There aren't any club clashed with your class</p>
+          {% endif %}
+            {% if club_clash_analysis[2] == [] %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClashedTime" disabled>
+                Club Clashed
+              </button>
+            {% else %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClashedTime">
+                Club Clashed
+              </button>
+            {% endif %}
+
+              <!-- Modal  for Class Time -->
+              <div class="modal fade" id="modalClashedTime" tabindex="-1" aria-labelledby="modalClashedLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modalClashedLabel">Club Clash Analysis</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                          <p>Clubs: {% for club_clashed in club_clash_analysis[2] %} {{ club_clashed[0] }}, {% endfor %}</p>
+                      {% if club_clash_analysis[1] != [] %}
+                          <p>Available Time Slot:{% for clash_available_time in club_clash_analysis[1] %} {{ clash_available_time }}, {% endfor %}</p>
+                      {% else %}
+                          <p>Available Time Slots: - </p>
+                      {% endif %}
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Third Card -->
+      <div class="col-md-6">
+      {% if student_retake_analysis[0] == True %}
+        <div class="card border-danger" style="margin-bottom:2rem;">
+      {% elif student_retake_analysis[0] == False and student_retake_analysis[1] > 0 %}
+        <div class="card border-warning" style="margin-bottom:2rem;">
+      {% else %}
+        <div class="card border-success" style="margin-bottom:2rem;">
+      {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">Student in Class Analysis</h5>
+          {% if student_retake_analysis[0] == True %}
+            <p class="card-text">There's a significant number of student in your class retake the unit</p>
+          {% elif student_retake_analysis[0] == False and student_retake_analysis[1] > 0 %}
+            <p class="card-text">There's a small number of student in your class retake the unit</p>
+          {% else %}
+            <p class="card-text">There aren't any student in your class retake the unit</p>
+          {% endif %}
+            {% if student_retake_analysis[1] == 0 %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalStudentRetake" disabled>
+                Student Retake Number
+              </button>
+            {% else %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalStudentRetake">
+                Student Retake Number
+              </button>
+            {% endif %}
+
+              <!-- Modal  for Class Time -->
+              <div class="modal fade" id="modalStudentRetake" tabindex="-1" aria-labelledby="modalStudentRetakeLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modalStudentRetakeLabel">Student Retake Analysis</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                          <p>Number of Students Retake: {{ student_retake_analysis[1] }}</p>
+                          <p>Percentage of Students Retake: {{ student_retake_analysis[2] }}%</p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fourth Card -->
+      <div class="col-md-6">
+      {% if weather_analysis[0] == True %}
+        <div class="card border-danger" style="margin-bottom:2rem;">
+      {% else %}
+        <div class="card border-success" style="margin-bottom:2rem;">
+      {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">Weather Analysis</h5>
+          {% if weather_analysis[0] == True %}
+            <p class="card-text">The weather condition has significant impact on the attendance rate.</p>
+          {% else%}
+            <p class="card-text">The weather condition has less impact on the attendance rate.</p>
+          {% endif %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassWeather">
+                Weather Condition List
+              </button>
+
+              <!-- Modal  for Class Time -->
+              <div class="modal fade" id="modalClassWeather" tabindex="-1" aria-labelledby="modalClassWeatherLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modalClassWeatherLabel">Class Weather Analysis</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                          <p>Weather affecting the class around: <b>{{ weather_analysis[1] }}%</b></p>
+
+                          <table class="table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Week</th>
+                              <th scope="col">Class datetime</th>
+                              <th scope="col">Weather</th>
+                            </tr>
+                          </thead>
+                          {% for every_class_weather in weather_analysis[2] %}
+                          <tbody>
+                            <tr>
+                              <th scope="row">{{every_class_weather.week}}</th>
+                              <td>{{every_class_weather.class_datetime}}</td>
+                            {% if every_class_weather.weather == "Thunderstorm" or every_class_weather.weather == "Rain" %}
+                              <td class="table-danger">{{every_class_weather.weather}}</td>
+                            {% else %}
+                                <td>{{every_class_weather.weather}}</td>
+                            {% endif %}
+                            </tr>
+                          </tbody>
+                          {% endfor %}
+                        </table>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+
+{% endblock content %}

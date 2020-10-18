@@ -17,7 +17,7 @@ login_manager = LoginManager(app)
 login_manager.login_message_category = 'info'
 login_manager.refresh_view = "auth.reauth"
 socketio = SocketIO(app)
-
+app.config['TRAP_HTTP_EXCEPTIONS']=True
 
 @socketio.on('disconnect')
 def disconnect_user():
