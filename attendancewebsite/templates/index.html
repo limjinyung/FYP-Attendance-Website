@@ -1,11 +1,15 @@
 {% extends "layout.html" %}
 {% block content %}
-    <div class="jumbotron">
+    <div class="jumbotron" style="background-image:url(monash_building.jpg);">
       <h1 class="display-4">Monash Attendance System</h1>
+        <br>
       <p class="lead">MAS is a user-friendly, effective and powerful system that provides smoothly integrated automated access control, attendance, reporting and more.</p>
+      <p class="lead">Student will be able to access and view their weekly performance in every unit and download their own attendance data.</p>
+      <p class="lead">Staff will have access to student's attendance data and will be abe to download data in .csv format.
+          Also, MAS is able to analyze student's attendance by considering a few factors like weather, class time and clubs.</p>
       <hr class="my-4">
-      <p>Please login to continue.</p>
-      <div class="row">
+      <p>Please login as student or staff to have different access to the system.</p>
+      <div>
           <a class="btn btn-primary btn-lg" href="/login" role="button">Login</a>
       </div>
 

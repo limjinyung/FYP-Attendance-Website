@@ -475,6 +475,3 @@ all_units = ['FIT2004_T1', 'FIT2004_T2', 'FIT2004_T3', 'FIT2004_T4', 'FIT3155_L1
              'FIT3162_L1', 'FIT3081_L2', 'FIT3081_L1', 'FIT3155_T1', 'FIT3155_T2', 'FIT3155_T3', 'FIT3155_T4',
              'FIT3161_L1', 'FIT2004_L1', 'FIT2004_L2', 'FIT2102_T1', 'FIT2102_T3', 'FIT2102_T2', 'FIT3081_T2',
              'FIT3143_L2', 'FIT3143_L1', 'FIT3081_T1']
-
-for single_unit in all_units:
-    print(single_unit, analysis_algo(single_unit))
