@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from attendancewebsite import app, db, bcrypt
 from attendancewebsite.forms import LoginForm, StudentRegistrationForm, StaffRegistrationForm
-from attendancewebsite.models import Student, Staff, attendance, student_unit
+from attendancewebsite.models import Student, Staff, Unit, attendance, student_unit
 from flask_login import login_user, current_user, logout_user, login_required
 from io import StringIO
 import csv
@@ -92,13 +92,13 @@ def index():
 def student_page():
     # get attendance
     attendance_list = db.session.query(attendance).filter(attendance.c.student_id == current_user.student_id). \
-        filter(attendance.c.year == this_year). \
-        filter(attendance.c.semester == this_semester).all()
+        filter(attendance.c.year == this_year[0]). \
+        filter(attendance.c.semester == this_semester[0]).all()
 
     # from student_unit get student's all unit
     unit_list = db.session.query(student_unit).filter(student_unit.c.student_id == current_user.student_id). \
-        filter(attendance.c.year == this_year). \
-        filter(attendance.c.semester == this_semester).all()
+        filter(attendance.c.year == this_year[0]). \
+        filter(attendance.c.semester == this_semester[0]).all()
 
     # if the request method is POST
     # get the value from checkbox and query the database
@@ -396,20 +396,32 @@ def attendance_analysis_page():
             uid = request.form.get("search_uid")
             uid = uid.upper()
 
+            unit_valid = db.session.query(Unit).filter(Unit.unit_code == uid).filter(Unit.unit_offer == True).first()
+
+            if not unit_valid:
+                flash("Please enter a valid unit code", "danger")
+                return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page', uid=""
+                                       , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
+                                       , student_retake_analysis=[], weather_analysis=[], analysis_suggestion="")
+
             analysis_result = analysis_algo(uid)
             class_time_analysis = analysis_result['class_start_time_analysis']
             club_clash_analysis = analysis_result['club_clash_analysis']
             student_retake_analysis = analysis_result['student_retake_analysis']
             weather_analysis = analysis_result['weather_analysis']
+            analysis_suggestion = analysis_result['analysis_suggestion']
 
-            return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page',uid=uid,
+            return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page', uid=uid,
                                    analysis_result=analysis_result, class_time_analysis=class_time_analysis,
                                    club_clash_analysis=club_clash_analysis,
-                                   student_retake_analysis=student_retake_analysis, weather_analysis=weather_analysis)
+                                   student_retake_analysis=student_retake_analysis,
+                                   weather_analysis=weather_analysis, analysis_suggestion=analysis_suggestion)
 
-        return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page', uid=""
-                               , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
-                               , student_retake_analysis=[], weather_analysis=[])
+        else:
+            return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page', uid=""
+                                   , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
+                                   , student_retake_analysis=[], weather_analysis=[], analysis_suggestion="")
+
 
 
 @app.route("/logout")

@@ -19,6 +19,10 @@
     <!--  Favicon  -->
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
+    <!--  Fontawesome  -->
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" rel="stylesheet"  type='text/css'>
+    <script src="https://kit.fontawesome.com/70aeab0ed3.js" crossorigin="anonymous"></script>
+
     {% if title %}
         <title>MAS - {{ title }}</title>
     {% else %}
@@ -44,8 +48,9 @@
                           <a class="dropdown-item" href="/staff_student_attendance">Student Attendance</a>
                           <a class="dropdown-item" href="/staff_unit_attendance">Unit Attendance</a>
                           <a class="dropdown-item" href="/late_absent_page">Late Attendance</a>
+                            <a class="dropdown-item" href="/attendance_data_page">Attendance Data</a>
                           <div class="dropdown-divider"></div>
-                          <a class="dropdown-item" href="/attendance_data_page">Attendance Data</a>
+                          <a class="dropdown-item" href="/attendance_analysis_page">Attendance Analysis</a>
                         </div>
                     </li>
                 {% else %}

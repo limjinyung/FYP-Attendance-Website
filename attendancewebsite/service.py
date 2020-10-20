@@ -2,15 +2,22 @@ from attendancewebsite import db
 from attendancewebsite.models import Semester, student_unit, attendance, room_unit, Club, Weather, student_club
 from datetime import datetime, timedelta, time
 from sqlalchemy.sql import func, and_
+import random
 
 start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.desc()).first()
 this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()
 this_semester = db.session.query(Semester.semester).order_by(Semester.start_date.desc()).first()
-start_week = datetime.strptime(start_week[0], '%Y-%m-%d').date()
+start_week = datetime.strptime(start_week[0], '%Y-%m-%d')
 # start_week = "2020-08-03"
 # this_year = "2020"
 # this_semester = "2"
 week_length = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+analysis_priority = {
+    'class_start_time_analysis': 1,
+    'club_clash_analysis': 2,
+    'student_retake_analysis': 3,
+    'weather_analysis': 4
+}
 
 
 def get_unit(attendance_list):
@@ -34,21 +41,11 @@ def create_attendance_sheet():
     for i in range(12):
         week_list.append(start_week + timedelta(days=(7 * i)))
 
-    this_week = 0
-    today_str = datetime.today().strftime('%Y-%m-%d')
-    today = datetime.strptime(today_str, '%Y-%m-%d').date()
+    strt_date = datetime.date(start_week)
+    current_date = datetime.date(datetime.now())
 
-    # initially the week is 12 weeks long,
-    # use for loop to get the current week
-    for j in range(len(week_list)):
-        if j == 0:
-            if (today == week_list[j]) or (today < week_list[j + 1]):
-                this_week = j + 1
-                break
-        else:
-            if (today == week_list[j]) or (week_list[j - 1] < today < week_list[j + 1]):
-                this_week = j + 1
-                break
+    num_of_days = abs(current_date - strt_date).days
+    this_week = (num_of_days // 7) + 1
 
     # create two types of week list, one is for calculation, another is for display on chart
     check_attendance_sheet = []
@@ -378,6 +375,7 @@ def get_current_weather(unit_code, week):
 def analysis_algo(unit_code):
 
     analysis_list = {}
+    analysis_suggestion = []
 
     # (1) checking class time
     flag, possible_class_start_time = get_class_start_time(unit_code)
@@ -386,7 +384,7 @@ def analysis_algo(unit_code):
     # (2) checking club and class clash
     clubs = get_clubs_datetime(unit_code)
     if len(clubs) > 0:
-        
+
         students_in_club_list = []
         students_in_class_list = []
         student_in_clashed_club = 0
@@ -444,6 +442,58 @@ def analysis_algo(unit_code):
     else:
         analysis_list['weather_analysis'] = False, round((count_bad_weather/len(unit_weather_list)*100),2), unit_weather_list
 
+    # (5) giving suggestion
+    for key in analysis_list.keys():
+        if analysis_list[key][0]:
+            analysis_suggestion.append(analysis_priority[key])
+
+    if analysis_suggestion:
+        analysis_suggestion.sort()
+        case = 0
+        suggestion = []
+        connector = ['Other than that, ', 'Besides that, ', 'Aside from that, ', 'Also, ']
+        final_suggestion = ""
+        while case < len(analysis_suggestion):
+
+            if analysis_suggestion[case] == 1 and analysis_list['class_start_time_analysis'][1] != []:
+                suggestion.append("Please choose another class time as there're some other time slot for the class.")
+                break
+            elif analysis_suggestion[case] == 1 and analysis_list['class_start_time_analysis'][1] == []:
+                suggestion.append("Class time is too early/late but there's no other time slots available.")
+                case += 1
+
+            if analysis_suggestion[case] == 2 and analysis_list['club_clash_analysis'][2] != []:
+                suggestion.append("Class time clashed with club(s). "
+                                  "Please choose another time slot to avoid low attendance rate.")
+                break
+            elif analysis_suggestion[case] == 2 and analysis_list['club_clash_analysis'][2] == []:
+                suggestion.append("Class time clashed with club(s) but there's aren't any more time slots left.")
+                case += 1
+
+            if analysis_suggestion[case] == 3:
+                suggestion.append("There're quite a lot of retake student in your unit. "
+                                  "Consider to add some other new material into teaching syallbus?")
+                break
+
+            if analysis_suggestion[case] == 4:
+                suggestion.append("It's always bad weather when your class starts. "
+                                  "We're sorry but we don't have the ability to control weather right now.")
+                break
+
+        if len(suggestion) == 1:
+            final_suggestion = suggestion[0]
+        else:
+            for suggestion_index in range(len(suggestion)):
+                if suggestion_index == 0:
+                    final_suggestion += suggestion[suggestion_index]
+                else:
+                    final_suggestion += random.choice(connector)
+                    final_suggestion += suggestion[suggestion_index].lower()
+    else:
+        final_suggestion = "Class is good!"
+
+    analysis_list['analysis_suggestion'] = final_suggestion
+
     return analysis_list
 
 
@@ -475,3 +525,6 @@ all_units = ['FIT2004_T1', 'FIT2004_T2', 'FIT2004_T3', 'FIT2004_T4', 'FIT3155_L1
              'FIT3162_L1', 'FIT3081_L2', 'FIT3081_L1', 'FIT3155_T1', 'FIT3155_T2', 'FIT3155_T3', 'FIT3155_T4',
              'FIT3161_L1', 'FIT2004_L1', 'FIT2004_L2', 'FIT2102_T1', 'FIT2102_T3', 'FIT2102_T2', 'FIT3081_T2',
              'FIT3143_L2', 'FIT3143_L1', 'FIT3081_T1']
+
+# for unit in all_units:
+#     print(unit, analysis_algo(unit))

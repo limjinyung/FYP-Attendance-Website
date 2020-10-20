@@ -8,20 +8,18 @@
         <div class="input-group mb-3">
           <input type="text" class="form-control" name="search_uid" placeholder="Enter Unit Code">
           <div class="input-group-append">
-            <button class="btn btn-outline-info" type="submit" onclick="searchStudentAttendance()">Search</button>
+            <button class="btn btn-outline-info" type="submit">Search</button>
           </div>
         </div>
     </form>
 
-    <br>
-
     <div class="alert alert-secondary text-center" role="alert">
-      Attendance Analysis for {{ uid }}
+        Attendance Analysis for <b>{{ uid }}</b>
     </div>
 
     <br>
 
-    <div class="row">
+    <div class="row card-group">
 
       <!-- First Card -->
       <div class="col-md-6">
@@ -30,15 +28,14 @@
       {% else %}
         <div class="card border-success" style="margin-bottom:2rem;">
       {% endif %}
-          <div class="card-body">
-            <h5 class="card-title">Class Time Analysis</h5>
-          {% if class_time_analysis[0] == True and class_time_analysis[1] != [] %}
-            <p class="card-text">Class time is too early/late for students. Click to see some available class time.</p>
-          {% elif class_time_analysis[0] == True and class_time_analysis[1] == [] %}
-            <p class="card-text">Class time is too early/late for students but there's not other class time available.</p>
-          {% else %}
-            <p class="card-text">Class time is good. It's not too early or too late for students.</p>
-          {% endif %}
+          <div class="card-body text-center">
+            {% if class_time_analysis[0] == False %}
+            <h5 class="card-title">Class Time Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
+            {% elif class_time_analysis == [] %}
+            <h5 class="card-title">Class Time Analysis </h5>
+            {% else %}
+            <h5 class="card-title">Class Time Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
+            {% endif %}
             {% if class_time_analysis[1] == [] %}
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassTime" disabled>
                 Available Time Slots
@@ -51,7 +48,7 @@
 
               <!-- Modal  for Class Time -->
               <div class="modal fade" id="modalClassTime" tabindex="-1" aria-labelledby="modalClassTimeLabel" aria-hidden="true">
-                  <div class="modal-dialog">
+                  <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                       <div class="modal-header">
                         <h5 class="modal-title" id="modalClassTimeLabel">Class Time Analysis</h5>
@@ -60,7 +57,16 @@
                         </button>
                       </div>
                       <div class="modal-body">
-                        Available Time Slots: {% for available_time in class_time_analysis[1] %} {{ available_time }}, {% endfor %}
+                        {% if class_time_analysis[0] == True and class_time_analysis[1] != [] %}
+                            <p>Class time is too early/late for students. Click to see some available class time.</p>
+                        {% elif class_time_analysis[0] == True and class_time_analysis[1] == [] %}
+                            <p>Class time is too early/late for students but there's not other class time available.</p>
+                        {% else %}
+                            <p>Class time is good. It's not too early or too late for students.</p>
+                        {% endif %}
+                        <div class="list-group">
+                          <a class="list-group-item list-group-item-action list-group-item-success" style="margin-bottom:1rem;">Available Time Slots: {% for available_time in class_time_analysis[1] %} {{ available_time }}, {% endfor %}</a>
+                        </div>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -81,17 +87,14 @@
       {% else %}
         <div class="card border-success" style="margin-bottom:2rem;">
       {% endif %}
-          <div class="card-body">
+          <div class="card-body text-center">
+            {% if club_clash_analysis[0] == False %}
+            <h5 class="card-title">Club Clash Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
+            {% elif club_clash_analysis == [] %}
             <h5 class="card-title">Club Clash Analysis</h5>
-          {% if (club_clash_analysis[0] == True) and (club_clash_analysis[1] != []) and (clubs != []) %}
-            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s). Click to see some other available class time</p>
-          {% elif (club_clash_analysis[0] == True) and (club_clash_analysis[2] == []) %}
-            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s) but there aren't any other class time available</p>
-          {% elif club_clash_analysis[0] == False and club_clash_analysis[2] != [] %}
-            <p class="card-text">There's club(s) clashed with your class but only a few student participated the club(s).</p>
-          {% else %}
-            <p class="card-text">There aren't any club clashed with your class</p>
-          {% endif %}
+            {% else %}
+            <h5 class="card-title">Club Clash Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
+            {% endif %}
             {% if club_clash_analysis[2] == [] %}
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClashedTime" disabled>
                 Club Clashed
@@ -113,12 +116,19 @@
                         </button>
                       </div>
                       <div class="modal-body">
-                          <p>Clubs: {% for club_clashed in club_clash_analysis[2] %} {{ club_clashed[0] }}, {% endfor %}</p>
-                      {% if club_clash_analysis[1] != [] %}
-                          <p>Available Time Slot:{% for clash_available_time in club_clash_analysis[1] %} {{ clash_available_time }}, {% endfor %}</p>
-                      {% else %}
-                          <p>Available Time Slots: - </p>
-                      {% endif %}
+                          {% if (club_clash_analysis[0] == True) and (club_clash_analysis[1] != []) and (clubs != []) %}
+                            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s). Click to see some other available class time</p>
+                          {% elif (club_clash_analysis[0] == True) and (club_clash_analysis[2] == []) %}
+                            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s) but there aren't any other class time available</p>
+                          {% elif club_clash_analysis[0] == False and club_clash_analysis[2] != [] %}
+                            <p class="card-text">There's club(s) clashed with your class but only a few student participated the club(s).</p>
+                          {% else %}
+                            <p class="card-text">There aren't any club clashed with your class</p>
+                          {% endif %}
+                          <div class="list-group">
+                              <a class="list-group-item list-group-item-action list-group-item-danger" style="margin-bottom:1rem;"><p>Clubs: {% for club_clashed in club_clash_analysis[2] %} {{ club_clashed[0] }}, {% endfor %}</p></a>
+                              <a class="list-group-item list-group-item-action list-group-item-success" style="margin-bottom:1rem;">{% if club_clash_analysis[1] != [] %} <p>Available Time Slot:{% for clash_available_time in club_clash_analysis[1] %} {{ clash_available_time }}, {% endfor %}</p> {% else %} <p>Available Time Slots: - </p> {% endif %} </a>
+                          </div>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -139,15 +149,14 @@
       {% else %}
         <div class="card border-success" style="margin-bottom:2rem;">
       {% endif %}
-          <div class="card-body">
+          <div class="card-body text-center">
+            {% if student_retake_analysis[0] == False %}
+            <h5 class="card-title">Student in Class Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
+            {% elif student_retake_analysis == [] %}
             <h5 class="card-title">Student in Class Analysis</h5>
-          {% if student_retake_analysis[0] == True %}
-            <p class="card-text">There's a significant number of student in your class retake the unit</p>
-          {% elif student_retake_analysis[0] == False and student_retake_analysis[1] > 0 %}
-            <p class="card-text">There's a small number of student in your class retake the unit</p>
-          {% else %}
-            <p class="card-text">There aren't any student in your class retake the unit</p>
-          {% endif %}
+            {% else %}
+            <h5 class="card-title">Student in Class Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
+            {% endif %}
             {% if student_retake_analysis[1] == 0 %}
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalStudentRetake" disabled>
                 Student Retake Number
@@ -169,8 +178,17 @@
                         </button>
                       </div>
                       <div class="modal-body">
-                          <p>Number of Students Retake: {{ student_retake_analysis[1] }}</p>
-                          <p>Percentage of Students Retake: {{ student_retake_analysis[2] }}%</p>
+                          {% if student_retake_analysis[0] == True %}
+                            <p class="card-text">There's a significant number of student in your class retake the unit</p>
+                          {% elif student_retake_analysis[0] == False and student_retake_analysis[1] > 0 %}
+                            <p class="card-text">There's a small number of student in your class retake the unit</p>
+                          {% else %}
+                            <p class="card-text">There aren't any student in your class retake the unit</p>
+                          {% endif %}
+                          <div class="list-group">
+                              <a class="list-group-item list-group-item-action list-group-item-danger" style="margin-bottom:1rem;"><p>Number of Students Retake: {{ student_retake_analysis[1] }}</p></a>
+                              <a class="list-group-item list-group-item-action list-group-item-danger" style="margin-bottom:1rem;"><p>Percentage of Students Retake: {{ student_retake_analysis[2] }}%</p></a>
+                          </div>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -189,20 +207,21 @@
       {% else %}
         <div class="card border-success" style="margin-bottom:2rem;">
       {% endif %}
-          <div class="card-body">
+          <div class="card-body text-center">
+            {% if weather_analysis[0] == False %}
+            <h5 class="card-title">Weather Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
+            {% elif weather_analysis == [] %}
             <h5 class="card-title">Weather Analysis</h5>
-          {% if weather_analysis[0] == True %}
-            <p class="card-text">The weather condition has significant impact on the attendance rate.</p>
-          {% else%}
-            <p class="card-text">The weather condition has less impact on the attendance rate.</p>
-          {% endif %}
+            {% else %}
+            <h5 class="card-title">Weather Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
+            {% endif %}
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassWeather">
                 Weather Condition List
               </button>
 
               <!-- Modal  for Class Time -->
               <div class="modal fade" id="modalClassWeather" tabindex="-1" aria-labelledby="modalClassWeatherLabel" aria-hidden="true">
-                  <div class="modal-dialog">
+                  <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                       <div class="modal-header">
                         <h5 class="modal-title" id="modalClassWeatherLabel">Class Weather Analysis</h5>
@@ -211,6 +230,11 @@
                         </button>
                       </div>
                       <div class="modal-body">
+                      {% if weather_analysis[0] == True %}
+                          <p class="card-text">The weather condition has significant impact on the attendance rate.</p>
+                      {% else%}
+                          <p class="card-text">The weather condition has less impact on the attendance rate.</p>
+                      {% endif %}
                           <p>Weather affecting the class around: <b>{{ weather_analysis[1] }}%</b></p>
 
                           <table class="table">
@@ -246,8 +270,11 @@
         </div>
       </div>
 
-
     </div>
+
+    <ul class="list-group">
+        <li class="list-group-item list-group-item-success">Suggestion: <b>{{ analysis_suggestion }}</b></li>
+    </ul>
 
 
 {% endblock content %}
