@@ -55,7 +55,7 @@ def student_register():
                           DOB=form.DOB.data, password=hashed_password, uid=form.uid.data)
         db.session.add(student)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+        flash('Please wait admin to confirm your account before you can login', 'success')
         return redirect(url_for('login'))
     return render_template('student_register.html', title='Register', form=form)
 
@@ -71,7 +71,7 @@ def staff_register():
                       email=form.email.data, DOB=form.DOB.data, password=hashed_password)
         db.session.add(staff)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+        flash('Please wait admin to confirm your account before you can login', 'success')
         return redirect(url_for('login'))
     return render_template('staff_register.html', title='Register', form=form)
 
@@ -97,8 +97,8 @@ def student_page():
 
     # from student_unit get student's all unit
     unit_list = db.session.query(student_unit).filter(student_unit.c.student_id == current_user.student_id). \
-        filter(attendance.c.year == this_year[0]). \
-        filter(attendance.c.semester == this_semester[0]).all()
+        filter(student_unit.c.year == this_year[0]). \
+        filter(student_unit.c.semester == this_semester[0]).all()
 
     # if the request method is POST
     # get the value from checkbox and query the database
@@ -106,14 +106,14 @@ def student_page():
         selected_units = request.form.getlist("choose_unit")
         if not selected_units:
             flash('Please at least tick one unit!', 'danger')
-        choose_units = get_unit(attendance_list)
+        choose_units = get_unit(unit_list)
         attendance_list = extract_units(attendance_list, selected_units)
     # else if the request method is GET
     # query all unit value
     else:
         # get units, e.g. ['FIT3091_L1', 'FIT3155_T2']
-        selected_units = get_unit(attendance_list)
-        choose_units = get_unit(attendance_list)
+        selected_units = get_unit(unit_list)
+        choose_units = get_unit(unit_list)
 
     # get the week list, e.g. [1,2,3,4...]
     attendance_sheet = create_attendance_sheet()
@@ -196,6 +196,14 @@ def staff_student_attendance():
                 student_details_id = student_details.student_id
                 student_details_first_name = student_details.first_name
                 student_details_last_name = student_details.last_name
+
+                # get the student's unit
+                student_unit_in_database = db.session.query(student_unit).filter(student_unit.c.student_id == sid,
+                                                                                 student_unit.c.year == this_year,
+                                                                                 student_unit.c.semester == this_semester).all()
+
+                print(student_unit_in_database)
+
             except AttributeError:
                 flash('Please enter a valid student id', 'danger')
                 return render_template('staff_student_attendance.html',
@@ -210,7 +218,7 @@ def staff_student_attendance():
             attendance_sheet = create_attendance_sheet()
 
             # get the student's unit list, e.g. ['FIT3091_L1', 'FIT3155_T2']
-            student_unit_list = get_unit(attendance_list)
+            student_unit_list = get_unit(student_unit_in_database)
 
             # sort the unit accordingly
             # e.g. {'FIT3081_L1': [1, 2, 3, 4], 'FIT3081_T1': [1, 2, 3, 4],...}
@@ -226,7 +234,7 @@ def staff_student_attendance():
                                    student_details_ln=student_details_last_name)
 
         else:
-            flash('Please enter a student id to view student attendance', 'info')
+            flash('Please enter a student id to view student attendance, etc: 29036186', 'info')
             return render_template('staff_student_attendance.html',
                                    title='Student Attendance Page', student_attendance_dict={})
 
@@ -274,6 +282,7 @@ def staff_unit_attendance():
             # get the week list, e.g. [1,2,3,4...]
             attendance_sheet = create_attendance_sheet()
 
+            flash("Please enter a unit code to view unit attendance, etc: FIT3155_L1", 'info')
             return render_template('staff_unit_attendance.html', title='Unit Attendance Page',
                                    unit_attendance_percentage={}, week_list=attendance_sheet[1], uid="")
 
@@ -294,13 +303,30 @@ def late_absent_page():
                     filter(attendance.c.year == this_year). \
                     filter(attendance.c.semester == this_semester).all()
 
-                if not attendance_list:
-                    flash("No information available. Please try again", "warning")
-                    return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
+                query_student = db.session.query(Student).filter(Student.student_id == sid).first()
+                if not query_student:
+                    flash("No such student exist.", "danger")
+                    return render_template('late_absent_page.html', title='Late Absent Page', late_data=[],
+                                           absent_data=[],
                                            student_name="", unit_name="")
 
-                query_student = db.session.query(Student).filter(Student.student_id == sid).first()
                 student_name = query_student.last_name + " " + query_student.first_name
+
+                if not attendance_list:
+
+                    check_student_exist_in_unit = db.session.query(student_unit)\
+                        .filter(student_unit.c.student_id == sid, student_unit.c.unit_code == uid,
+                                student_unit.c.year == this_year, student_unit.c.semester == this_semester).first()
+
+                    if check_student_exist_in_unit:
+
+                        flash("Student has no attendance record.", "warning")
+                        return render_template('late_absent_page.html', title='Late Absent Page', late_data=[],
+                                               absent_data=[], student_name=student_name, unit_name=uid)
+                    else:
+                        flash("No information available. Please try again", "warning")
+                        return render_template('late_absent_page.html', title='Late Absent Page', late_data=[]
+                                               , absent_data=[], student_name="", unit_name="")
 
                 # get the week list, e.g. [1,2,3,4...]
                 attendance_sheet = create_attendance_sheet()
@@ -324,7 +350,7 @@ def late_absent_page():
                 return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
                                        student_name="", unit_name="")
 
-        flash("Please enter student ID and unit code", "info")
+        flash("Please enter student ID and unit code, etc 29036186 and FIT3143_L1", "info")
         return render_template('late_absent_page.html', title='Late Absent Page', late_data=[], absent_data=[],
                                student_name="", unit_name="")
 
@@ -382,6 +408,7 @@ def attendance_data_page():
                 return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=student_name
                                        , student_id=student_id, table_data=table_data)
 
+        flash("Please enter a student id to view student attendance data list, etc: 29036186", 'info')
         return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=""
                                , student_id="", table_data={})
 
@@ -418,6 +445,7 @@ def attendance_analysis_page():
                                    weather_analysis=weather_analysis, analysis_suggestion=analysis_suggestion)
 
         else:
+            flash("Please enter a unit code to view unit attendance analytics, etc: FIT3155_L1", 'info')
             return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page', uid=""
                                    , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
                                    , student_retake_analysis=[], weather_analysis=[], analysis_suggestion="")

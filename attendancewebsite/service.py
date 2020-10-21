@@ -7,11 +7,12 @@ import random
 start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.desc()).first()
 this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()
 this_semester = db.session.query(Semester.semester).order_by(Semester.start_date.desc()).first()
+semester_break = db.session.query(Semester.week_before_sembreak).order_by(Semester.start_date.desc()).first()
 start_week = datetime.strptime(start_week[0], '%Y-%m-%d')
 # start_week = "2020-08-03"
 # this_year = "2020"
 # this_semester = "2"
-week_length = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+week_length = 13
 analysis_priority = {
     'class_start_time_analysis': 1,
     'club_clash_analysis': 2,
@@ -38,16 +39,23 @@ def create_attendance_sheet():
     """
     week_list = []
 
-    for i in range(12):
+    for i in range(week_length):
         week_list.append(start_week + timedelta(days=(7 * i)))
 
     strt_date = datetime.date(start_week)
     current_date = datetime.date(datetime.now())
+    week_before_semester = semester_break[0]
 
     num_of_days = abs(current_date - strt_date).days
     this_week = (num_of_days // 7) + 1
 
+    if week_before_semester < this_week:
+        this_week -= 1
+        week_list.remove(week_list[week_before_semester])
+
     # create two types of week list, one is for calculation, another is for display on chart
+    # check_attendance_sheet is for calculation
+    # chart_week_display is for display on chart
     check_attendance_sheet = []
     for k in range(len(week_list[0:this_week])):
         check_attendance_sheet.append(k + 1)
@@ -118,8 +126,8 @@ def sort_unit(units, attendance_list):
         student_attendance[units[i]] = []
 
     for j in range(len(attendance_list)):
-        if attendance_list[j][1] in student_attendance:
-            student_attendance[attendance_list[j][1]].append(attendance_list[j][2])
+        unit_in_attendance_list = attendance_list[j][1]
+        student_attendance[unit_in_attendance_list].append(attendance_list[j][2])
 
         student_attendance[attendance_list[j][1]].sort()
 
