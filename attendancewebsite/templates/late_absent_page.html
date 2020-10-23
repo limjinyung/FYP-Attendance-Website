@@ -47,10 +47,10 @@
                   {% else %}
                     <td>{{ late_data[0] }}%</td>
                   {% endif %}
-                  {% if absent_data > 50 %}
-                    <td class="table-danger">{{ absent_data }}%</td>
+                  {% if absent_data[0] > 50 %}
+                    <td class="table-danger">{{ absent_data[0] }}%</td>
                   {% else %}
-                    <td>{{ absent_data }}%</td>
+                    <td>{{ absent_data[0] }}%</td>
                   {% endif %}
               {% endif %}
             </tr>
@@ -86,13 +86,38 @@
         </table>
     </div>
 
+    <div>
+        <table class="table table-hover table-bordered">
+          <thead>
+            <div class="alert alert-secondary" role="alert">
+                {% if student_name == "" and unit_name == "" %}
+                    absent attendance report
+                {% else %}
+                    {{ student_name }}'s Absent Attendance Report
+                {% endif %}
+            </div>
+            <tr>
+              <th scope="col">Week</th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for absent_table_data in absent_data[1] %}
+            <tr>
+              <td>{{ absent_table_data[0] }}</td>
+              <td>{{ absent_table_data[1] }}</td>
+            </tr>
+          </tbody>
+          {% endfor %}
+        </table>
+    </div>
+
 
     <script>
         var late_data = {{ late_data|tojson }}
         var absent_data = {{ absent_data|tojson }}
 
         if (late_data.length == 0 && absent_data.length == 0){
-            console.log("showing none");
             document.getElementById("lateAbsentChart").style.display = "none";
             document.getElementsByClassName("table").style.display = "none";
         }
@@ -100,7 +125,7 @@
 
             doughnutData = {
                 datasets: [{
-                    data: [late_data[0], absent_data],
+                    data: [late_data[0], absent_data[0]],
                     backgroundColor: [
                     "#DC3812",
                     "#3266CC"

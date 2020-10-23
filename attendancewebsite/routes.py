@@ -7,8 +7,10 @@ from io import StringIO
 import csv
 from attendancewebsite.service import get_unit, create_attendance_sheet, generate_attendance_total_percentage, \
     generate_attendance_percentage, sort_unit, extract_units, calculate_unit_attendance, this_year, this_semester, \
-    attendance_data_without_sid, calculate_absent_data, calculate_late_data, analysis_algo
+    attendance_data_without_sid, calculate_absent_data, calculate_late_data, analysis_algo, is_staff
 
+# week length will be set here in case of anything the week length need to be changed
+# it'll be easy to just change it here
 week_length = 12
 
 
@@ -164,16 +166,6 @@ def download_student_csv():
         return output
 
 
-def is_staff(current_user):
-    if current_user.is_authenticated:
-        if current_user.email.split("@", 1)[1] == 'student.monash.edu':
-            flash("Please login as staff to access this page", "danger")
-            logout_user()
-            return render_template('/', title='Home')
-
-    return True
-
-
 @app.route('/staff_page', methods=['GET', 'POST'])
 @login_required
 def staff_page():
@@ -184,7 +176,6 @@ def staff_page():
 @app.route('/staff_student_attendance', methods=['GET', 'POST'])
 @login_required
 def staff_student_attendance():
-
     if is_staff(current_user):
 
         if request.method == "POST":
@@ -241,7 +232,6 @@ def staff_student_attendance():
 @app.route('/staff_unit_attendance', methods=['GET', 'POST'])
 @login_required
 def staff_unit_attendance():
-
     if is_staff(current_user):
 
         if request.method == "POST":
@@ -290,7 +280,6 @@ def staff_unit_attendance():
 @app.route('/late_absent_page', methods=['GET', 'POST'])
 @login_required
 def late_absent_page():
-
     if is_staff(current_user):
 
         if request.method == "POST":
@@ -316,7 +305,7 @@ def late_absent_page():
 
                 if not attendance_list:
 
-                    check_student_exist_in_unit = db.session.query(student_unit)\
+                    check_student_exist_in_unit = db.session.query(student_unit) \
                         .filter(student_unit.c.student_id == sid, student_unit.c.unit_code == uid,
                                 student_unit.c.year == this_year, student_unit.c.semester == this_semester).first()
 
@@ -376,7 +365,6 @@ def staff_page_download_student_csv(student_id):
 @app.route('/attendance_data_page', methods=['GET', 'POST'])
 @login_required
 def attendance_data_page():
-
     if is_staff(current_user):
 
         if request.method == "POST":
@@ -407,7 +395,8 @@ def attendance_data_page():
                                        , student_id="", table_data={})
 
             else:
-                return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=student_name
+                return render_template('attendance_data_page.html', title='Attendance Data Page',
+                                       student_name=student_name
                                        , student_id=student_id, table_data=table_data)
 
         flash("Please enter a student id to view student attendance data list, etc: 29036186", 'info')
@@ -418,7 +407,6 @@ def attendance_data_page():
 @app.route('/attendance_analysis_page', methods=['GET', 'POST'])
 @login_required
 def attendance_analysis_page():
-
     if is_staff(current_user):
 
         if request.method == "POST":
@@ -452,7 +440,6 @@ def attendance_analysis_page():
             return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page', uid=""
                                    , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
                                    , student_retake_analysis=[], weather_analysis=[], analysis_suggestion="")
-
 
 
 @app.route("/logout")

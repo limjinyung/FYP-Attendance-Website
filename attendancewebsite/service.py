@@ -18,6 +18,10 @@ from attendancewebsite.models import Semester, student_unit, room_unit, Club, We
 from datetime import datetime, timedelta, time
 import random
 
+# Flask Libary
+from flask import flash, render_template
+from flask_login import logout_user
+
 start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.desc()).first()
 this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()
 this_semester = db.session.query(Semester.semester).order_by(Semester.start_date.desc()).first()
@@ -342,10 +346,14 @@ def calculate_absent_data(week_list, attendance_list):
         if check_week not in present_week:
             absent_week.append(check_week)
 
+    for each_absent_week in absent_week:
+        absent_datetime = start_week + timedelta(days=(each_absent_week-1))
+        absent_attendance.append([each_absent_week, absent_datetime.strftime("%d/%m/%Y")])
+
     # calculate the total percentage of the absent attendance
     absent_percentage = round(((len(absent_week)) / len(week_list)) * 100, 2)
 
-    return absent_percentage
+    return absent_percentage, absent_attendance
 
 
 ##########################################################
@@ -648,6 +656,23 @@ def analysis_algo(unit_code):
     analysis_list['analysis_suggestion'] = final_suggestion
 
     return analysis_list
+
+
+def is_staff(current_user):
+    """
+    to check if the current user role is student or staff. If it;s staff return True, else log the user out and return
+    to the index page
+    :param current_user: Flask object, either it's Student or Staff object
+    :return: boolean, or render the template to index page
+    """
+
+    if current_user.is_authenticated:
+        if current_user.email.split("@", 1)[1] == 'student.monash.edu':
+            flash("Please login as staff to access this page", "danger")
+            logout_user()
+            return render_template('/', title='Home')
+
+    return True
 
 
 all_units = ['FIT2004_T1', 'FIT2004_T2', 'FIT2004_T3', 'FIT2004_T4', 'FIT3155_L1', 'FIT3155_L2', 'FIT3161_T1',
