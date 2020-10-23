@@ -7,7 +7,7 @@ from io import StringIO
 import csv
 from attendancewebsite.service import get_unit, create_attendance_sheet, generate_attendance_total_percentage, \
     generate_attendance_percentage, sort_unit, extract_units, calculate_unit_attendance, this_year, this_semester, \
-    extract_student_id, calculate_absent_data, calculate_late_data, analysis_algo
+    attendance_data_without_sid, calculate_absent_data, calculate_late_data, analysis_algo
 
 week_length = 12
 
@@ -142,7 +142,7 @@ def student_attendance_data_page():
         filter(attendance.c.year == this_year). \
         filter(attendance.c.semester == this_semester).order_by(attendance.c.week).all()
 
-    table_data = extract_student_id(attendance_list)
+    table_data = attendance_data_without_sid(attendance_list)
 
     return render_template('student_attendance_data_page.html', title='Attendance Data Page', table=table_data)
 
@@ -398,7 +398,7 @@ def attendance_data_page():
                 filter(attendance.c.year == this_year). \
                 filter(attendance.c.semester == this_semester).all()
 
-            table_data = extract_student_id(attendance_list)
+            table_data = attendance_data_without_sid(attendance_list)
 
             if not attendance_list:
                 flash("This student is not taking any unit. For any assistanec please contact the administration.",
