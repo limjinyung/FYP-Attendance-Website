@@ -65,7 +65,18 @@
                             <p>Class time is good. It's not too early or too late for students.</p>
                         {% endif %}
                         <div class="list-group">
-                          <a class="list-group-item list-group-item-action list-group-item-success" style="margin-bottom:1rem;">Available Time Slots: {% for available_time in class_time_analysis[1] %} {{ available_time }}, {% endfor %}</a>
+
+                          <a class="list-group-item list-group-item-action list-group-item-success" style="margin-bottom:1rem;">
+                          Available Time Slots:
+                          {% for available_time in class_time_analysis[1] %}
+                              {% if available_time == class_time_analysis[1][-1] %}
+                                 {{ available_time }}
+                              {% else %}
+                                 {{ available_time }},
+                              {% endif %}
+                          {% endfor %}
+                          </a>
+
                         </div>
                       </div>
                       <div class="modal-footer">
@@ -88,12 +99,14 @@
         <div class="card border-success" style="margin-bottom:2rem;">
       {% endif %}
           <div class="card-body text-center">
-            {% if club_clash_analysis[0] == False %}
+            {% if club_clash_analysis[0] == False and club_clash_analysis[2] != [] %}
+            <h5 class="card-title">Club Clash Analysis <i class="fas fa-exclamation-circle" style="color:#FFD300"></i></h5>
+            {% elif club_clash_analysis[0] == False %}
             <h5 class="card-title">Club Clash Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
-            {% elif club_clash_analysis == [] %}
-            <h5 class="card-title">Club Clash Analysis</h5>
-            {% else %}
+            {% elif club_clash_analysis[0] == True %}
             <h5 class="card-title">Club Clash Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
+            {% else %}
+            <h5 class="card-title">Club Clash Analysis</h5>
             {% endif %}
             {% if club_clash_analysis[2] == [] %}
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClashedTime" disabled>
@@ -150,12 +163,14 @@
         <div class="card border-success" style="margin-bottom:2rem;">
       {% endif %}
           <div class="card-body text-center">
-            {% if student_retake_analysis[0] == False %}
-            <h5 class="card-title">Student in Class Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
-            {% elif student_retake_analysis == [] %}
-            <h5 class="card-title">Student in Class Analysis</h5>
+            {% if student_retake_analysis[0] == False and student_retake_analysis[1] > 0 %}
+            <h5 class="card-title">Student Retake Analysis <i class="fas fa-exclamation-circle" style="color:#FFD300"></i></h5>
+            {% elif student_retake_analysis[0] == False %}
+            <h5 class="card-title">Student Retake Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
+            {% elif student_retake_analysis[0] == True %}
+            <h5 class="card-title">Student Retake Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
             {% else %}
-            <h5 class="card-title">Student in Class Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
+            <h5 class="card-title">Student Retake Analysis</h5>
             {% endif %}
             {% if student_retake_analysis[1] == 0 %}
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalStudentRetake" disabled>
@@ -211,13 +226,23 @@
             {% if weather_analysis[0] == False %}
             <h5 class="card-title">Weather Analysis <i class="fas fa-check-circle" style="color:green"></i></h5>
             {% elif weather_analysis == [] %}
-            <h5 class="card-title">Weather Analysis</h5>
+            <h5 class="card-title">Weather Analysis</i></h5>
             {% else %}
             <h5 class="card-title">Weather Analysis <i class="fas fa-times-circle" style="color:red"></i></h5>
             {% endif %}
+            {% if weather_analysis[0] == True %}
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassWeather">
                 Weather Condition List
               </button>
+            {% elif weather_analysis == [] %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassWeather">
+                Weather Condition List
+              </button>
+            {% else %}
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalClassWeather" disabled>
+                Weather Condition List
+              </button>
+            {% endif %}
 
               <!-- Modal  for Class Time -->
               <div class="modal fade" id="modalClassWeather" tabindex="-1" aria-labelledby="modalClassWeatherLabel" aria-hidden="true">

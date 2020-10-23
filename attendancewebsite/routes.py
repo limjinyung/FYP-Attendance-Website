@@ -202,7 +202,6 @@ def staff_student_attendance():
                                                                                  student_unit.c.year == this_year,
                                                                                  student_unit.c.semester == this_semester).all()
 
-                print(student_unit_in_database)
 
             except AttributeError:
                 flash('Please enter a valid student id', 'danger')
@@ -248,6 +247,7 @@ def staff_unit_attendance():
         if request.method == "POST":
             uid = request.form.get("search_uid")
             uid = uid.upper()
+            uid = ' '.join(uid.split())
 
             # get the attendance of the unit
             attendance_list = db.session.query(attendance).filter(attendance.c.unit_code == uid). \
@@ -295,7 +295,9 @@ def late_absent_page():
 
         if request.method == "POST":
             uid = request.form.get("search_uid").upper()
+            uid = ' '.join(uid.split())
             sid = request.form.get("search_sid").upper()
+            sid = ' '.join(sid.split())
 
             if uid and sid:
                 attendance_list = db.session.query(attendance).filter(attendance.c.unit_code == uid). \
@@ -422,6 +424,7 @@ def attendance_analysis_page():
         if request.method == "POST":
             uid = request.form.get("search_uid")
             uid = uid.upper()
+            uid = ' '.join(uid.split())
 
             unit_valid = db.session.query(Unit).filter(Unit.unit_code == uid).filter(Unit.unit_offer == True).first()
 

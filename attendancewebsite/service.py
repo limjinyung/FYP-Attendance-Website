@@ -8,10 +8,14 @@ start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.
 this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()
 this_semester = db.session.query(Semester.semester).order_by(Semester.start_date.desc()).first()
 semester_break = db.session.query(Semester.week_before_sembreak).order_by(Semester.start_date.desc()).first()
+week_before_semester = semester_break[0]
 start_week = datetime.strptime(start_week[0], '%Y-%m-%d')
+
 # start_week = "2020-08-03"
 # this_year = "2020"
 # this_semester = "2"
+# week_before_semester = 7
+
 week_length = 13
 analysis_priority = {
     'class_start_time_analysis': 1,
@@ -19,6 +23,19 @@ analysis_priority = {
     'student_retake_analysis': 3,
     'weather_analysis': 4
 }
+
+
+def find_this_week():
+
+    # calculation for this week
+    strt_date = datetime.date(start_week)
+    current_date = datetime.date(datetime.now())
+
+    # calculation for this week
+    num_of_days = abs(current_date - strt_date).days
+    this_week = (num_of_days // 7) + 1
+
+    return this_week
 
 
 def get_unit(attendance_list):
@@ -39,16 +56,12 @@ def create_attendance_sheet():
     """
     week_list = []
 
+    this_week = find_this_week()
+
     for i in range(week_length):
         week_list.append(start_week + timedelta(days=(7 * i)))
 
-    strt_date = datetime.date(start_week)
-    current_date = datetime.date(datetime.now())
-    week_before_semester = semester_break[0]
-
-    num_of_days = abs(current_date - strt_date).days
-    this_week = (num_of_days // 7) + 1
-
+    # exclude the week of semester break
     if week_before_semester < this_week:
         this_week -= 1
         week_list.remove(week_list[week_before_semester])
@@ -64,12 +77,14 @@ def create_attendance_sheet():
     for l in range(len(check_attendance_sheet)):
         chart_week_display.append("W" + str(check_attendance_sheet[l]))
 
+    # ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10'])
     return check_attendance_sheet, chart_week_display
 
 
 def generate_attendance_percentage(attendance_sheet, student_attendance_week_list):
     """
-    Generate logged in student unit's attendance list
+    Generate logged in student every week unit's attendance percentage by
+    dividing student's every unit week list with attendance sheet week list
     :param attendance_sheet: week list, e.g. [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     :param student_attendance_week_list: a dictionary of unit and unit's attendance present week,
     e.g. {'FIT3155_L1': [2, 4, 6], 'FIT3081_L1': [1, 2, 3, 4, 5], 'FIT3081_T1': [1, 2, 3, 4], 'FIT3155_T1': [1, 3, 4]}
@@ -88,7 +103,7 @@ def generate_attendance_percentage(attendance_sheet, student_attendance_week_lis
             if i in student_attendance_week_list[key]:
                 mark_attendance.append(i)
 
-            count_percentage = (len(mark_attendance) / len(attendance_sheet[0:i])) * 100
+            count_percentage = round(((len(mark_attendance) / len(attendance_sheet[0:i])) * 100), 2)
 
             mark_attendance_percentage.append(count_percentage)
 
@@ -113,12 +128,12 @@ def student_attendance_week(attendance_list):
 
 def sort_unit(units, attendance_list):
     """
-    Sort the unit for front-end purposes
+    Sort the unit for front-end purposes in chart
     :param units: a list of units, e.g. ['FIT3155_L1', 'FIT3081_L1', 'FIT3081_T1', 'FIT3155_T1']
     :param attendance_list: a list of attendance list,
     e.g. [('29036186', 'FIT3081_L1', 1, datetime.datetime(2020, 8, 3, 10, 10),
     datetime.datetime(2020, 8, 3, 12, 0), False, '2020', '2'), ('29036186', 'FIT3081_L1', 2, datetime.datetime(2020, 8, 10, 10, 2), datetime.datetime(2020, 8, 10, 12, 1), False, '2020', '2')]
-    :return:
+    :return: attendance_list sorted by units
     """
     student_attendance = {}
 
@@ -141,7 +156,7 @@ def extract_units(attendance_list, selected_units):
     [('29036186', 'FIT3081_L1', 3, datetime.datetime(2020, 8, 17, 10, 15), datetime.datetime(2020, 8, 17, 12, 7), False,
     '2020', '2'),...,...]
     :param selected_units: a list of units, e.g. ['FIT3155_L1', 'FIT3081_L1', 'FIT3155_T1']
-    :return:
+    :return: attendance_list with extracted the units given by selected units list
     """
     for i in range(len(attendance_list)):
 
@@ -161,33 +176,57 @@ def extract_units(attendance_list, selected_units):
 
 
 def generate_attendance_total_percentage(attendance_sheet, student_attendance_week_list):
+    """
+    calculate the unit
+    :param attendance_sheet: a list of attendance week list, e.g. [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    :param student_attendance_week_list: a dictionary type of student's attendance list,
+    e.g. {'FIT3081_L2': [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12], 'FIT3081_T1': [1, 3, 4, 5, 6, 7, 9, 10, 11, 12],
+    'FIT2102_L1': [2, 3, 4, 5, 6, 7, 9, 10, 11, 12],...}
+    :return: a dict of unit and it's total percentage, e.g. {'FIT3081_L2': 100.0, 'FIT3081_T1': 90.9090909090909,
+    'FIT2102_L1': 90.9090909090909}
+    """
     student_attendance_percentage = {}
 
+    # for every unit's week list in the dict, take length of the list  and
+    # divide with the attendance week list to obtain the total percentage of every unit
     for key in student_attendance_week_list:
-        student_attendance_percentage[key] = (len(student_attendance_week_list[key]) / len(attendance_sheet)) * 100
+        student_attendance_percentage[key] = round(((len(student_attendance_week_list[key]) / len(attendance_sheet)) * 100), 2)
 
     return student_attendance_percentage
 
 
 def calculate_unit_attendance(attendance_list, unit_code):
+    """
+    Calculate the unit weekly attendance
+    :param attendance_list:
+    :param unit_code:
+    :return:
+    """
     # get all the students that are taking the unit
     # e.g. [('29036186', 'FIT3155_L1', '2020', '2'), ('29821894', 'FIT3155_L1', '2020', '2'), ...]
     student_list = db.session.query(student_unit).filter(student_unit.c.unit_code == unit_code).filter(
         student_unit.c.year == this_year).filter(student_unit.c.semester == this_semester).all()
 
+    # total number of student in the unit
     total_attendance_number = len(student_list)
 
     unit_attendance = {}
 
+    for all_week in range(1,find_this_week()):
+        unit_attendance[all_week] = 0
+
     for i in range(len(attendance_list)):
 
-        if attendance_list[i][2] in unit_attendance:
-            unit_attendance[attendance_list[i][2]] += 1
+        week_count = attendance_list[i][2]
+        if week_count in unit_attendance:
+            unit_attendance[week_count] += 1
         else:
-            unit_attendance[attendance_list[i][2]] = 1
+            unit_attendance[week_count] = 1
 
     for week in unit_attendance:
-        unit_attendance[week] = (unit_attendance[week] / total_attendance_number) * 100
+        unit_attendance[week] = round(((unit_attendance[week] / total_attendance_number) * 100), 2)
+
+    print(unit_attendance)
 
     return unit_attendance
 
@@ -208,7 +247,7 @@ def calculate_late_data(week_list, attendance_list):
     late_attendance = []
 
     for check_attendance in attendance_list:
-        late_bool = check_attendance[6]
+        late_bool = check_attendance[5]
         if late_bool:
             late_attendance.append([check_attendance[2], check_attendance[3].strftime("%m/%d/%Y, %H:%M:%S")
                                        , check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
@@ -526,7 +565,6 @@ def simple_algo(unit_code):
 
             else:
                 return 4, get_study_year(unit_code)  # string
-
 
 all_units = ['FIT2004_T1', 'FIT2004_T2', 'FIT2004_T3', 'FIT2004_T4', 'FIT3155_L1', 'FIT3155_L2', 'FIT3161_T1',
              'FIT3162_T1', 'FIT2102_L1', 'FIT2102_L2', 'FIT3143_T4', 'FIT3143_T3', 'FIT3143_T2', 'FIT3143_T1',

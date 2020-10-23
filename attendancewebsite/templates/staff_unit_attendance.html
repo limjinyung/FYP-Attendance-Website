@@ -59,6 +59,8 @@
     var week_list = {{ week_list|tojson }}
     var unit_name = {{ uid|tojson }}
 
+    console.log(unit_attendance_dict)
+
         if(unit_name === ""){
             chart_name = ""
         }else{
@@ -77,7 +79,7 @@
         datasets: [{
             data: unit_attendance,
             label: "Unit Percentage",
-            borderColor: "#3e95cd",
+            borderColor: "#123764",
             fill: false,
             lineTension: 0.1
           }]
