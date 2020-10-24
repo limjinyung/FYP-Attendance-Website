@@ -120,7 +120,7 @@ def student_page():
     if request.method == "POST":
         selected_units = request.form.getlist("choose_unit")
         if not selected_units:
-            flash('Please at least tick one unit!', 'danger')
+            flash('Please tick at least one unit!', 'danger')
         choose_units = get_unit(unit_list)
         attendance_list = extract_units(attendance_list, selected_units)
     # else if the request method is GET
