@@ -26,9 +26,9 @@
           <thead>
             <div class="alert alert-secondary" role="alert">
                 {% if student_name == "" and unit_name == "" %}
-                    late/absent attendance table
+                    Late/Absent Attendance Table
                 {% else %}
-                    {{ student_name }}'s late and absent percentage in {{ unit_name }}
+                    {{ student_name }}'s Late/Absent Percentage in {{ unit_name }}
                 {% endif %}
             </div>
             <tr>
@@ -61,9 +61,9 @@
     <div>
         <table class="table table-hover table-bordered">
           <thead>
-            <div class="alert alert-secondary" role="alert">
+            <div class="alert" role="alert" style="background-color:#A2B5D5">
                 {% if student_name == "" and unit_name == "" %}
-                    late attendance report
+                    Late Attendance Report
                 {% else %}
                     {{ student_name }}'s Late Attendance Report
                 {% endif %}
@@ -89,9 +89,9 @@
     <div>
         <table class="table table-hover table-bordered">
           <thead>
-            <div class="alert alert-secondary" role="alert">
+            <div class="alert" role="alert" style="background-color:#3B6190; color:whitesmoke">
                 {% if student_name == "" and unit_name == "" %}
-                    absent attendance report
+                    Absent Attendance Report
                 {% else %}
                     {{ student_name }}'s Absent Attendance Report
                 {% endif %}
@@ -127,8 +127,8 @@
                 datasets: [{
                     data: [late_data[0], absent_data[0]],
                     backgroundColor: [
-                    "#DC3812",
-                    "#3266CC"
+                    "#3B6190",
+                    "#A2B5D5"
                     ],
                     hoverBorderColor: [
                                         "#eee","#eee"
