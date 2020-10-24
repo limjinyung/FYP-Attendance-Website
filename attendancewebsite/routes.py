@@ -310,7 +310,7 @@ def late_absent_page():
 
                 query_student = db.session.query(Student).filter(Student.student_id == sid).first()
                 if not query_student:
-                    flash("No such student exist.", "danger")
+                    flash("No such student exists.", "danger")
                     return render_template('late_absent_page.html', title='Late Absent Page', late_data=[],
                                            absent_data=[],
                                            student_name="", unit_name="")

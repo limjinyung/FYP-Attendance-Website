@@ -378,6 +378,18 @@ def get_class_start_time(unit_code, db, room_unit, Club):
 
 
 def get_possible_class_start_time(unit_code, db, room_unit, Club):
+    """
+    This function is to get all the possible class start time when the class start time of the unit code passed in as an argument is too
+    early or too late.
+    How we consider a possible class start time is clashing with a club if it fulfills the following condition
+    |(Club 1)--------------------------|(Class Start Time)--------------------------------------|(Club 2)
+    The Class Start Time will not clash with the frist club if the Class Starts after the first club has ended
+    The Class Start Time will not clash with the second club if the class ends before the second club starts
+    :param unit_code: the unit code where the class start time is too early or too late
+    :param db: the database ORM object to access the database to do queries
+    :param room_unit: the room_unit table in the database
+    :param Club: the Club table in the database.
+    """
     result_set = db.session.query(room_unit).filter(room_unit.c.unit_code == unit_code).all()
 
     class_day = result_set[0][4]
@@ -453,7 +465,7 @@ def get_clubs_datetime(unit_code, db, room_unit, Club):
             # else if the time difference is positive, class start later then the club
             time_diff = (class_start_time - club_start_time).total_seconds()
 
-            if (time_diff > -class_duration) and (time_diff <= club.club_duration):
+            if (time_diff > -class_duration) and (time_diff < club.club_duration):
                 clubs.append([club.club_name, club.club_code, time_diff])
 
     return clubs
