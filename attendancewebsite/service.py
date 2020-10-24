@@ -9,30 +9,9 @@ DATE - Started Aug 9 2020
 NOTES - Python version used is 3.7 and the database adapter used to connect with PostgreSQl is the psycopg binary
 """
 
-
-# Owned
-from attendancewebsite import db
-from attendancewebsite.models import Semester, student_unit, room_unit, Club, Weather, student_club
-
 # Python Library
 from datetime import datetime, timedelta, time
 import random
-
-# Flask Libary
-from flask import flash, render_template
-from flask_login import logout_user
-
-start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.desc()).first()
-this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()
-this_semester = db.session.query(Semester.semester).order_by(Semester.start_date.desc()).first()
-semester_break = db.session.query(Semester.week_before_sembreak).order_by(Semester.start_date.desc()).first()
-week_before_semester = semester_break[0]
-start_week = datetime.strptime(start_week[0], '%Y-%m-%d')
-
-# start_week = "2020-08-03"
-# this_year = "2020"
-# this_semester = "2"
-# week_before_semester = 7
 
 week_length = 13
 analysis_priority = {
@@ -43,7 +22,7 @@ analysis_priority = {
 }
 
 
-def find_this_week():
+def find_this_week(start_week):
     """
     calculation for this week by using the current date subtract the start date of the semester and divide by 7
     :return: type integer indicates the current week
@@ -79,7 +58,7 @@ def get_unit(attendance_list):
     return units
 
 
-def create_attendance_sheet():
+def create_attendance_sheet(start_week, week_before_semester):
     """
     Create two list of week list based on the start_week query from the database and this week. The attendance sheet
     length will be depending on this week.
@@ -88,7 +67,7 @@ def create_attendance_sheet():
     """
     week_list = []
 
-    this_week = find_this_week()
+    this_week = find_this_week(start_week)
 
     for i in range(week_length):
         week_list.append(start_week + timedelta(days=(7 * i)))
@@ -223,21 +202,27 @@ def generate_attendance_total_percentage(attendance_sheet, student_attendance_we
     # for every unit's week list in the dict, take length of the list  and
     # divide with the attendance week list to obtain the total percentage of every unit
     for key in student_attendance_week_list:
-        student_attendance_percentage[key] = round(((len(student_attendance_week_list[key]) / len(attendance_sheet)) * 100), 2)
+        student_attendance_percentage[key] = round(((len(student_attendance_week_list[key]) /
+                                                     len(attendance_sheet)) * 100), 2)
 
     return student_attendance_percentage
 
 
-def calculate_unit_attendance(attendance_list, unit_code):
+def calculate_unit_attendance(attendance_list, unit_code, db, student_unit, this_year, this_semester, start_week):
     """
     Calculate the unit weekly attendance by comparing weekly student's attendance list with attendance sheet
     :param attendance_list: a list of attendance list,
-    e.g. [('29036186', 'FIT3081_L1', 1, datetime.datetime(2020, 8, 3, 10, 10),
-    datetime.datetime(2020, 8, 3, 12, 0), False, '2020', '2'), ('29036186', 'FIT3081_L1', 2,
-    datetime.datetime(2020, 8, 10, 10, 2), datetime.datetime(2020, 8, 10, 12, 1), False, '2020', '2')]
+           e.g. [('29036186', 'FIT3081_L1', 1, datetime.datetime(2020, 8, 3, 10, 10),
+           datetime.datetime(2020, 8, 3, 12, 0), False, '2020', '2'), ('29036186', 'FIT3081_L1', 2,
+           datetime.datetime(2020, 8, 10, 10, 2), datetime.datetime(2020, 8, 10, 12, 1), False, '2020', '2')]
     :param unit_code: a string of unit code. The unit code to be calculate the weekly percentage
-    :return: unit weekly attendance in a dict format, e.g. {1: 88.24, 2: 88.24, 3: 79.41, 4: 94.12, 5: 97.06, 6: 88.24,
-    7: 88.24, 8: 79.41, 9: 88.24, 10: 94.12, 11: 88.24}
+    :param db: the database engine to query student_unit
+    :param student_unit: the student_unit model from model.py
+    :param this_year: current year query from database passed in from routes.py
+    :param this_semester: current semester query from database passed in from routes.py
+    :param start_week: the first week of semester query from database passed in from routes.py
+    :return: unit weekly attendance in a dict format, e.g. {1: 88.24, 2: 88.24, 3: 79.41, 4: 94.12,
+             5: 97.06, 6: 88.24, 7: 88.24, 8: 79.41, 9: 88.24, 10: 94.12, 11: 88.24}
     """
     # get all the students that are taking the unit
     # e.g. [('29036186', 'FIT3155_L1', '2020', '2'), ('29821894', 'FIT3155_L1', '2020', '2'), ...]
@@ -251,7 +236,7 @@ def calculate_unit_attendance(attendance_list, unit_code):
     unit_attendance = {}
 
     # find_this_week function will return this week
-    this_week = find_this_week()
+    this_week = find_this_week(start_week)
 
     # initialize the unit_attendance dict from week 1 until this week
     for all_week in range(1, this_week):
@@ -313,7 +298,7 @@ def calculate_late_data(week_list, attendance_list):
         late_bool = check_attendance[5]
         if late_bool:
             late_attendance.append([check_attendance[2], check_attendance[3].strftime("%m/%d/%Y, %H:%M:%S")
-                                       , check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
+                                       ,check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
 
     # calculate the late percentage by dividing the length of late attendance list with the length of week list
     late_percentage = round((len(late_attendance) / len(week_list)) * 100, 2)
@@ -321,7 +306,7 @@ def calculate_late_data(week_list, attendance_list):
     return late_percentage, late_attendance
 
 
-def calculate_absent_data(week_list, attendance_list):
+def calculate_absent_data(week_list, attendance_list, start_week):
     """
     Calculate a student's absent attendance percentage by comparing student's present weeks with the week list
     :param week_list: week list from week 1 until this week, e.g. [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
@@ -329,6 +314,7 @@ def calculate_absent_data(week_list, attendance_list):
     e.g. [('29036186', 'FIT3081_L1', 1, datetime.datetime(2020, 8, 3, 10, 10),
     datetime.datetime(2020, 8, 3, 12, 0), False, '2020', '2'), ('29036186', 'FIT3081_L1', 2,
     datetime.datetime(2020, 8, 10, 10, 2), datetime.datetime(2020, 8, 10, 12, 1), False, '2020', '2')]
+    :param start_week: the first week of semester query from database passed in from routes.py
     :return: a float type of absent_percentage
     """
     # TODO: return a list of absent data
@@ -347,7 +333,7 @@ def calculate_absent_data(week_list, attendance_list):
             absent_week.append(check_week)
 
     for each_absent_week in absent_week:
-        absent_datetime = start_week + timedelta(days=(each_absent_week-1))
+        absent_datetime = start_week + timedelta(days=(each_absent_week - 1))
         absent_attendance.append([each_absent_week, absent_datetime.strftime("%d/%m/%Y")])
 
     # calculate the total percentage of the absent attendance
@@ -361,10 +347,13 @@ def calculate_absent_data(week_list, attendance_list):
 ##########################################################
 
 
-def get_class_start_time(unit_code):
+def get_class_start_time(unit_code, db, room_unit, Club):
     """
     Check from database if the class time of the class is too early or too late
     :param unit_code: a string of unit code
+    :param db: the database engine to query room_unit, Club
+    :param room_unit: the room_unit model from models.py passed in from routes.py
+    :param Club: the Club model from models.py passed in from routes.py
     :return: tuple containing first boolean, and second a list of possible class start time. This list can be empty
     """
 
@@ -376,19 +365,19 @@ def get_class_start_time(unit_code):
     # if the class start time is between 8am to 10 am
     # if yes, return True and a list of possible class start time
     if (class_start_time >= time(8, 0, 0)) and (class_start_time <= time(10, 0, 0)):
-        return True, get_possible_class_start_time(unit_code)
+        return True, get_possible_class_start_time(unit_code, db, room_unit, Club)
 
     # if the class start time is more than 6pm
     # if yes, return True and a list of possible class start time
     elif class_start_time >= time(18, 0, 0):
-        return True, get_possible_class_start_time(unit_code)
+        return True, get_possible_class_start_time(unit_code, db, room_unit, Club)
 
     # return False and an empty list if both is false
     else:
         return False, []
 
 
-def get_possible_class_start_time(unit_code):
+def get_possible_class_start_time(unit_code, db, room_unit, Club):
     result_set = db.session.query(room_unit).filter(room_unit.c.unit_code == unit_code).all()
 
     class_day = result_set[0][4]
@@ -431,7 +420,7 @@ def get_possible_class_start_time(unit_code):
     return possible_class_start_time
 
 
-def get_clubs_datetime(unit_code):
+def get_clubs_datetime(unit_code, db, room_unit, Club):
     """
     Check if the unit's class time is clash with any clubs by comparing the class time with every clubs' start time. If
     there's a clash it'll find the time difference between the class and the club
@@ -470,7 +459,7 @@ def get_clubs_datetime(unit_code):
     return clubs
 
 
-def retake_num_of_students(unit_code, year, sem):
+def retake_num_of_students(unit_code, year, sem, db, student_unit):
     """
     query students from database and check if there's any student has data in previous semester is also appearing in
     current semester. Record the numbers of students and return it in a list
@@ -519,7 +508,7 @@ def retake_num_of_students(unit_code, year, sem):
     return num_of_students
 
 
-def analysis_algo(unit_code):
+def analysis_algo(unit_code, db, room_unit, student_unit, student_club, this_year, this_semester, Weather, Club):
     """
     the main function to run the unit analysis where a dict analysis_list will hold all the analysis result.
     This function consist 5 parts:
@@ -539,11 +528,11 @@ def analysis_algo(unit_code):
     analysis_suggestion = []
 
     # (1) checking class time
-    flag, possible_class_start_time = get_class_start_time(unit_code)
+    flag, possible_class_start_time = get_class_start_time(unit_code, db, room_unit, Club)
     analysis_list['class_start_time_analysis'] = flag, possible_class_start_time
 
     # (2) checking club and class clash
-    clubs = get_clubs_datetime(unit_code)
+    clubs = get_clubs_datetime(unit_code, db, room_unit, Club)
     if len(clubs) > 0:
 
         students_in_club_list = []
@@ -557,7 +546,7 @@ def analysis_algo(unit_code):
                 students_in_club_list.append(students_in_club[0])
 
         # get students in class
-        get_students_in_class = db.session.query(student_unit).filter(student_unit.c.unit_code == unit_code)\
+        get_students_in_class = db.session.query(student_unit).filter(student_unit.c.unit_code == unit_code) \
             .filter(student_unit.c.year == this_year).filter(student_unit.c.semester == this_semester).all()
         for students_in_class in get_students_in_class:
             students_in_class_list.append(students_in_class[0])
@@ -568,8 +557,8 @@ def analysis_algo(unit_code):
                 student_in_clashed_club += 1
 
         # check how many student(s) in clashed club(s)
-        if student_in_clashed_club > (len(get_students_in_class)/4):
-            club_other_class_time = get_possible_class_start_time(unit_code)
+        if student_in_clashed_club > (len(get_students_in_class) / 4):
+            club_other_class_time = get_possible_class_start_time(unit_code, db, room_unit, Club)
             analysis_list['club_clash_analysis'] = True, club_other_class_time, clubs
         else:
             analysis_list['club_clash_analysis'] = False, [], clubs
@@ -577,19 +566,21 @@ def analysis_algo(unit_code):
         analysis_list['club_clash_analysis'] = False, [], clubs
 
     # (3) checking numbers of retake student in a class
-    num_of_retake_students = retake_num_of_students(unit_code, this_year[0], this_semester[0])
+    num_of_retake_students = retake_num_of_students(unit_code, this_year[0], this_semester[0], db, student_unit)
     if num_of_retake_students > 0:
-        total_number_student_unit = db.session.query(student_unit).filter(student_unit.c.unit_code == unit_code)\
+        total_number_student_unit = db.session.query(student_unit).filter(student_unit.c.unit_code == unit_code) \
             .filter(student_unit.c.year == this_year).filter(student_unit.c.semester == this_semester).all()
-        if num_of_retake_students > (len(total_number_student_unit)/2):
-            analysis_list['student_retake_analysis'] = True, num_of_retake_students, round((num_of_retake_students/len(total_number_student_unit)*100), 2)
+        if num_of_retake_students > (len(total_number_student_unit) / 2):
+            analysis_list['student_retake_analysis'] = True, num_of_retake_students, round(
+                (num_of_retake_students / len(total_number_student_unit) * 100), 2)
         else:
-            analysis_list['student_retake_analysis'] = False, num_of_retake_students, round((num_of_retake_students/len(total_number_student_unit)*100), 2)
+            analysis_list['student_retake_analysis'] = False, num_of_retake_students, round(
+                (num_of_retake_students / len(total_number_student_unit) * 100), 2)
     else:
         analysis_list['student_retake_analysis'] = False, 0, 0
 
     # (4) check how weather affect the class
-    unit_weather_list = db.session.query(Weather).filter(Weather.unit_code == unit_code)\
+    unit_weather_list = db.session.query(Weather).filter(Weather.unit_code == unit_code) \
         .filter(Weather.year == this_year).filter(Weather.semester == this_semester).all()
 
     count_bad_weather = 0
@@ -598,10 +589,12 @@ def analysis_algo(unit_code):
         if everyday_weather.weather in bad_weather_standard:
             count_bad_weather += 1
 
-    if count_bad_weather > (len(unit_weather_list)/2):
-        analysis_list['weather_analysis'] = True, round((count_bad_weather/len(unit_weather_list)*100),2), unit_weather_list
+    if count_bad_weather > (len(unit_weather_list) / 2):
+        analysis_list['weather_analysis'] = True, round((count_bad_weather / len(unit_weather_list) * 100),
+                                                        2), unit_weather_list
     else:
-        analysis_list['weather_analysis'] = False, round((count_bad_weather/len(unit_weather_list)*100),2), unit_weather_list
+        analysis_list['weather_analysis'] = False, round((count_bad_weather / len(unit_weather_list) * 100),
+                                                         2), unit_weather_list
 
     # (5) giving suggestion
     for key in analysis_list.keys():
@@ -656,23 +649,6 @@ def analysis_algo(unit_code):
     analysis_list['analysis_suggestion'] = final_suggestion
 
     return analysis_list
-
-
-def is_staff(current_user):
-    """
-    to check if the current user role is student or staff. If it;s staff return True, else log the user out and return
-    to the index page
-    :param current_user: Flask object, either it's Student or Staff object
-    :return: boolean, or render the template to index page
-    """
-
-    if current_user.is_authenticated:
-        if current_user.email.split("@", 1)[1] == 'student.monash.edu':
-            flash("Please login as staff to access this page", "danger")
-            logout_user()
-            return render_template('/', title='Home')
-
-    return True
 
 
 all_units = ['FIT2004_T1', 'FIT2004_T2', 'FIT2004_T3', 'FIT2004_T4', 'FIT3155_L1', 'FIT3155_L2', 'FIT3161_T1',

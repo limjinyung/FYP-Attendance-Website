@@ -1,17 +1,30 @@
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from attendancewebsite import app, db, bcrypt
 from attendancewebsite.forms import LoginForm, StudentRegistrationForm, StaffRegistrationForm
-from attendancewebsite.models import Student, Staff, Unit, attendance, student_unit
+from attendancewebsite.models import Student, Staff, Semester, Unit, Club, Weather, attendance, student_unit, room_unit, student_club
 from flask_login import login_user, current_user, logout_user, login_required
 from io import StringIO
+from datetime import datetime
 import csv
 from attendancewebsite.service import get_unit, create_attendance_sheet, generate_attendance_total_percentage, \
-    generate_attendance_percentage, sort_unit, extract_units, calculate_unit_attendance, this_year, this_semester, \
-    attendance_data_without_sid, calculate_absent_data, calculate_late_data, analysis_algo, is_staff
+    generate_attendance_percentage, sort_unit, extract_units, calculate_unit_attendance, \
+    attendance_data_without_sid, calculate_absent_data, calculate_late_data, analysis_algo
 
 # week length will be set here in case of anything the week length need to be changed
 # it'll be easy to just change it here
 week_length = 12
+
+start_week = db.session.query(Semester.start_date).order_by(Semester.start_date.desc()).first()
+this_year = db.session.query(Semester.year).order_by(Semester.start_date.desc()).first()
+this_semester = db.session.query(Semester.semester).order_by(Semester.start_date.desc()).first()
+semester_break = db.session.query(Semester.week_before_sembreak).order_by(Semester.start_date.desc()).first()
+week_before_semester = semester_break[0]
+start_week = datetime.strptime(start_week[0], '%Y-%m-%d')
+
+# start_week = "2020-08-03"
+# this_year = "2020"
+# this_semester = "2"
+# week_before_semester = 7
 
 
 @app.route("/login", methods=['GET', 'POST'])
@@ -118,7 +131,7 @@ def student_page():
         choose_units = get_unit(unit_list)
 
     # get the week list, e.g. [1,2,3,4...]
-    attendance_sheet = create_attendance_sheet()
+    attendance_sheet = create_attendance_sheet(start_week, week_before_semester)
 
     # sort the unit accordingly
     # e.g. {'FIT3081_L1': [1, 2, 3, 4], 'FIT3081_T1': [1, 2, 3, 4],...}
@@ -205,7 +218,7 @@ def staff_student_attendance():
                 filter(attendance.c.semester == this_semester).all()
 
             # get the week list, e.g. [1,2,3,4...]
-            attendance_sheet = create_attendance_sheet()
+            attendance_sheet = create_attendance_sheet(start_week, week_before_semester)
 
             # get the student's unit list, e.g. ['FIT3091_L1', 'FIT3155_T2']
             student_unit_list = get_unit(student_unit_in_database)
@@ -239,6 +252,9 @@ def staff_unit_attendance():
             uid = uid.upper()
             uid = ' '.join(uid.split())
 
+            # get the week list, e.g. [1,2,3,4...]
+            attendance_sheet = create_attendance_sheet(start_week, week_before_semester)
+
             # get the attendance of the unit
             attendance_list = db.session.query(attendance).filter(attendance.c.unit_code == uid). \
                 filter(attendance.c.year == this_year). \
@@ -246,13 +262,11 @@ def staff_unit_attendance():
 
             if attendance_list:
 
-                unit_attendance_percentage_unsorted = calculate_unit_attendance(attendance_list, uid)
+                unit_attendance_percentage_unsorted = calculate_unit_attendance(attendance_list, uid, db, student_unit,
+                                                                                this_year, this_semester, start_week)
 
                 unit_attendance_percentage = {k: unit_attendance_percentage_unsorted[k] for k in
                                               sorted(unit_attendance_percentage_unsorted)}
-
-                # get the week list, e.g. [1,2,3,4...]
-                attendance_sheet = create_attendance_sheet()
 
                 return render_template('staff_unit_attendance.html', title='Unit Attendance Page',
                                        unit_attendance_percentage=unit_attendance_percentage,
@@ -261,7 +275,7 @@ def staff_unit_attendance():
             else:
 
                 # get the week list, e.g. [1,2,3,4...]
-                attendance_sheet = create_attendance_sheet()
+                attendance_sheet = create_attendance_sheet(start_week, week_before_semester)
 
                 flash('Please enter a valid unit code.', 'danger')
                 return render_template('staff_unit_attendance.html', title='Unit Attendance Page',
@@ -270,7 +284,7 @@ def staff_unit_attendance():
         else:
 
             # get the week list, e.g. [1,2,3,4...]
-            attendance_sheet = create_attendance_sheet()
+            attendance_sheet = create_attendance_sheet(start_week, week_before_semester)
 
             flash("Please enter a unit code to view unit attendance, etc: FIT3155_L1", 'info')
             return render_template('staff_unit_attendance.html', title='Unit Attendance Page',
@@ -320,10 +334,10 @@ def late_absent_page():
                                                , absent_data=[], student_name="", unit_name="")
 
                 # get the week list, e.g. [1,2,3,4...]
-                attendance_sheet = create_attendance_sheet()
+                attendance_sheet = create_attendance_sheet(start_week, week_before_semester)
 
                 late_data = calculate_late_data(attendance_sheet[0], attendance_list)
-                absent_data = calculate_absent_data(attendance_sheet[0], attendance_list)
+                absent_data = calculate_absent_data(attendance_sheet[0], attendance_list, start_week)
 
                 return render_template('late_absent_page.html', title='Late Absent Page', late_data=late_data,
                                        absent_data=absent_data, student_name=student_name, unit_name=uid)
@@ -422,7 +436,7 @@ def attendance_analysis_page():
                                        , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
                                        , student_retake_analysis=[], weather_analysis=[], analysis_suggestion="")
 
-            analysis_result = analysis_algo(uid)
+            analysis_result = analysis_algo(uid, db, room_unit, student_unit, student_club, this_year, this_semester, Weather, Club)
             class_time_analysis = analysis_result['class_start_time_analysis']
             club_clash_analysis = analysis_result['club_clash_analysis']
             student_retake_analysis = analysis_result['student_retake_analysis']
@@ -451,6 +465,23 @@ def logout():
 @app.before_request
 def make_session_permanent():
     session.permanent = False
+
+
+def is_staff(current_user):
+    """
+    to check if the current user role is student or staff. If it;s staff return True, else log the user out and return
+    to the index page
+    :param current_user: Flask object, either it's Student or Staff object
+    :return: boolean, or render the template to index page
+    """
+
+    if current_user.is_authenticated:
+        if current_user.email.split("@", 1)[1] == 'student.monash.edu':
+            flash("Please login as staff to access this page", "danger")
+            logout_user()
+            return render_template('/', title='Home')
+
+    return True
 
 
 @app.errorhandler(Exception)
