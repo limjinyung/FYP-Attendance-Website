@@ -58,7 +58,7 @@
                       </div>
                       <div class="modal-body">
                         {% if class_time_analysis[0] == True and class_time_analysis[1] != [] %}
-                            <p>Class time is too early/late for students. Click to see some available class time.</p>
+                            <p>Class time is too early/late for students. Here are some available time slots:</p>
                         {% elif class_time_analysis[0] == True and class_time_analysis[1] == [] %}
                             <p>Class time is too early/late for students but there's not other class time available.</p>
                         {% else %}
@@ -130,7 +130,7 @@
                       </div>
                       <div class="modal-body">
                           {% if (club_clash_analysis[0] == True) and (club_clash_analysis[1] != []) and (clubs != []) %}
-                            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s). Click to see some other available class time</p>
+                            <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s). Here are some available time slots: </p>
                           {% elif (club_clash_analysis[0] == True) and (club_clash_analysis[2] == []) %}
                             <p class="card-text">There's club(s) clashed with your class and a significant number of students in your class are in the club(s) but there aren't any other class time available</p>
                           {% elif club_clash_analysis[0] == False and club_clash_analysis[2] != [] %}

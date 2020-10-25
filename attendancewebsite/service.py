@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, time
 import random
 
 week_length = 13
+
 analysis_priority = {
     'class_start_time_analysis': 1,
     'club_clash_analysis': 2,
@@ -670,4 +671,4 @@ all_units = ['FIT2004_T1', 'FIT2004_T2', 'FIT2004_T3', 'FIT2004_T4', 'FIT3155_L1
              'FIT3143_L2', 'FIT3143_L1', 'FIT3081_T1']
 
 # for unit in all_units:
-#     print(unit, analysis_algo(unit))
+#     print(unit, analysis_algo(unit, db, room_unit, student_unit, student_club, this_year, this_semester, Weather, Club))
