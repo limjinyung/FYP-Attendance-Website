@@ -616,52 +616,35 @@ def analysis_algo(unit_code, db, room_unit, student_unit, student_club, this_yea
         if analysis_list[key][0]:
             analysis_suggestion.append(analysis_priority[key])
 
+    suggestion = ""
+
     if analysis_suggestion:
         analysis_suggestion.sort()
         case = 0
-        suggestion = []
-        connector = ['Other than that, ', 'Besides that, ', 'Aside from that, ', 'Also, ']
-        final_suggestion = ""
         while case < len(analysis_suggestion):
 
-            if analysis_suggestion[case] == 1 and analysis_list['class_start_time_analysis'][1] != []:
-                suggestion.append("Please choose another class time as there're some other time slot for the class.")
+            if analysis_suggestion[case] == 1:
+                suggestion += "Please choose another class time if there's any other time slots available"
                 break
-            elif analysis_suggestion[case] == 1 and analysis_list['class_start_time_analysis'][1] == []:
-                suggestion.append("Class time is too early/late but there's no other time slots available.")
-                case += 1
 
-            if analysis_suggestion[case] == 2 and analysis_list['club_clash_analysis'][2] != []:
-                suggestion.append("Class time clashed with club(s). "
-                                  "Please choose another time slot to avoid low attendance rate.")
+            if analysis_suggestion[case] == 2:
+                suggestion += "Class time clashed with club(s). " \
+                              "Please choose another time slot to avoid low attendance rate if available."
                 break
-            elif analysis_suggestion[case] == 2 and analysis_list['club_clash_analysis'][2] == []:
-                suggestion.append("Class time clashed with club(s) but there's aren't any more time slots left.")
-                case += 1
 
             if analysis_suggestion[case] == 3:
-                suggestion.append("There're quite a lot of retake student in your unit. "
-                                  "Consider to add some other new material into teaching syallbus?")
+                suggestion += "There're quite a lot of student retake this unit. " \
+                              "Consider to add some other new material into teaching syllabus?"
                 break
 
             if analysis_suggestion[case] == 4:
-                suggestion.append("It's always bad weather when your class starts. "
-                                  "We're sorry but we don't have the ability to control weather right now.")
+                suggestion += "It's always bad weather when your class starts. " \
+                              "We're sorry but we don't have the ability to control weather right now."
                 break
-
-        if len(suggestion) == 1:
-            final_suggestion = suggestion[0]
-        else:
-            for suggestion_index in range(len(suggestion)):
-                if suggestion_index == 0:
-                    final_suggestion += suggestion[suggestion_index]
-                else:
-                    final_suggestion += random.choice(connector)
-                    final_suggestion += suggestion[suggestion_index].lower()
     else:
-        final_suggestion = "Class is good!"
+        suggestion += "Class is good!"
 
-    analysis_list['analysis_suggestion'] = final_suggestion
+    analysis_list['analysis_suggestion'] = suggestion
 
     return analysis_list
 
