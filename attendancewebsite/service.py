@@ -430,6 +430,8 @@ def get_possible_class_start_time(unit_code, db, room_unit, Club):
         if not crash:
             possible_class_start_time.append(key)
 
+    possible_class_start_time.sort()
+
     return possible_class_start_time
 
 
