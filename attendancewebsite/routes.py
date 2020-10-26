@@ -1,3 +1,13 @@
+"""
+FILENAME - routes.py
+CODING - UTF-8
+USAGE - Map all URLs to actions such as displaying charts, table, perform analysis by calling functions from the file
+        service.py all HTTP errors all handled by the function handle_error.
+DATE - Started Aug 9 2020
+NOTES - Python version used is 3.7 and the database adapter used to connect with PostgreSQl is the psycopg binary
+CODED BY - LIM JIN YUNG
+"""
+
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from attendancewebsite import app, db, bcrypt
 from attendancewebsite.forms import LoginForm, StudentRegistrationForm, StaffRegistrationForm
@@ -20,12 +30,6 @@ this_semester = db.session.query(Semester.semester).order_by(Semester.start_date
 semester_break = db.session.query(Semester.week_before_sembreak).order_by(Semester.start_date.desc()).first()
 week_before_semester = semester_break[0]
 start_week = datetime.strptime(start_week[0], '%Y-%m-%d')
-
-# start_week = "2020-08-03"
-# this_year = "2020"
-# this_semester = "2"
-# week_before_semester = 7
-
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -194,6 +198,11 @@ def staff_student_attendance():
         if request.method == "POST":
             sid = request.form.get("search_sid")
 
+            if sid == "":
+                flash('Please at least enter a student id', 'danger')
+                return render_template('staff_student_attendance.html',
+                                       title='Student Attendance Page', student_attendance_dict={})
+
             try:
                 # get the student details
                 student_details = db.session.query(Student).filter(Student.student_id == sid).first()
@@ -249,6 +258,12 @@ def staff_unit_attendance():
 
         if request.method == "POST":
             uid = request.form.get("search_uid")
+
+            if uid == "":
+                flash('Please at least enter a unit code.', 'danger')
+                return render_template('staff_unit_attendance.html', title='Unit Attendance Page',
+                                       unit_attendance_percentage={}, week_list=[], uid="")
+
             uid = uid.upper()
             uid = ' '.join(uid.split())
 
@@ -384,6 +399,11 @@ def attendance_data_page():
         if request.method == "POST":
             sid = request.form.get("search_sid")
 
+            if sid == "":
+                flash("Please at least enter a student ID", "danger")
+                return render_template('attendance_data_page.html', title='Attendance Data Page', student_name=""
+                                       , student_id="", table_data={})
+
             # get the student details
             student_details = db.session.query(Student).filter(Student.student_id == sid).first()
 
@@ -425,6 +445,13 @@ def attendance_analysis_page():
 
         if request.method == "POST":
             uid = request.form.get("search_uid")
+
+            if uid == "":
+                flash("Please at least enter a unit code.", 'danger')
+                return render_template('/staff_attendance_analysis.html', title='Attendance Analysis Page', uid=""
+                                       , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
+                                       , student_retake_analysis=[], weather_analysis=[], analysis_suggestion="")
+
             uid = uid.upper()
             uid = ' '.join(uid.split())
 
@@ -436,7 +463,8 @@ def attendance_analysis_page():
                                        , analysis_result={}, class_time_analysis=[], club_clash_analysis=[]
                                        , student_retake_analysis=[], weather_analysis=[], analysis_suggestion="")
 
-            analysis_result = analysis_algo(uid, db, room_unit, student_unit, student_club, this_year, this_semester, Weather, Club)
+            analysis_result = analysis_algo(uid, db, room_unit, student_unit, student_club, this_year, this_semester,
+                                            Weather, Club)
             class_time_analysis = analysis_result['class_start_time_analysis']
             club_clash_analysis = analysis_result['club_clash_analysis']
             student_retake_analysis = analysis_result['student_retake_analysis']
@@ -495,4 +523,5 @@ def handle_error(e):
             return render_template('index.html', title="Home")
         raise e
     except:
+        flash("There's a problem with the dashbaord. Please contact the administrator to fix the dashbaord.", 'danger')
         return render_template('index.html', title="Home")

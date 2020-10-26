@@ -1,6 +1,15 @@
+"""
+FILENAME - models.py
+CODING - UTF-8
+USAGE - Creates database model using class modal where each column will have own specified data type, primary key,
+        foreign key. Database model can be built directly from python console by running the command db.create_all()
+DATE - Started Aug 9 2020
+NOTES - Python version used is 3.7 and the database adapter used to connect with PostgreSQl is the psycopg binary
+CODED BY - LIM JIN YUNG
+"""
+
 from attendancewebsite import db, login_manager
 from flask_login import UserMixin
-from datetime import datetime
 
 
 @login_manager.user_loader

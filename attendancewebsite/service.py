@@ -7,6 +7,7 @@ USAGE - all the function that will be used in routes.py. Calculate attendance pe
         results back to the routes.py to be show in the front-end.
 DATE - Started Aug 9 2020
 NOTES - Python version used is 3.7 and the database adapter used to connect with PostgreSQl is the psycopg binary
+CODED BY - LIM JIN YUNG
 """
 
 # Python Library
@@ -299,7 +300,7 @@ def calculate_late_data(week_list, attendance_list):
         late_bool = check_attendance[5]
         if late_bool:
             late_attendance.append([check_attendance[2], check_attendance[3].strftime("%m/%d/%Y, %H:%M:%S")
-                                       ,check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
+                                       , check_attendance[4].strftime("%m/%d/%Y, %H:%M:%S")])
 
     # calculate the late percentage by dividing the length of late attendance list with the length of week list
     late_percentage = round((len(late_attendance) / len(week_list)) * 100, 2)
@@ -318,7 +319,7 @@ def calculate_absent_data(week_list, attendance_list, start_week):
     :param start_week: the first week of semester query from database passed in from routes.py
     :return: a float type of absent_percentage
     """
-    # TODO: return a list of absent data
+
     absent_attendance = []
     present_week = []
     absent_week = []
@@ -628,18 +629,18 @@ def analysis_algo(unit_code, db, room_unit, student_unit, student_club, this_yea
                 break
 
             if analysis_suggestion[case] == 2:
-                suggestion += "Class time clashed with club(s). " \
-                              "Please choose another time slot to avoid low attendance rate if available."
+                suggestion += ("Class time clashed with club(s). "
+                               "Please choose another time slot to avoid low attendance rate if available.")
                 break
 
             if analysis_suggestion[case] == 3:
-                suggestion += "There're quite a lot of student retake this unit. " \
-                              "Consider to add some other new material into teaching syllabus?"
+                suggestion += ("There're quite a lot of student retake this unit. "
+                               "Consider to add some other new material into teaching syllabus?")
                 break
 
             if analysis_suggestion[case] == 4:
-                suggestion += "It's always bad weather when your class starts. " \
-                              "We're sorry but we don't have the ability to control weather right now."
+                suggestion += ("It's always bad weather when your class starts. "
+                               "We're sorry but we don't have the ability to control weather right now.")
                 break
     else:
         suggestion += "Class is good!"

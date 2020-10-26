@@ -1,3 +1,13 @@
+"""
+FILENAME - forms.py
+CODING - UTF-8
+USAGE - Building forms using FlaskForm with own defined function to validate credentials like ID and email for student
+        and staff while signing up.
+DATE - Started Aug 9 2020
+NOTES - Python version used is 3.7 and the database adapter used to connect with PostgreSQl is the psycopg binary
+CODED BY - LIM JIN YUNG
+"""
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, DateField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
@@ -70,29 +80,4 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
-
-
-# class StudentSearchForm(FlaskForm, current_user):
-#
-#     def get_unit(check_unit):
-#         units = []
-#         for i in range(len(check_unit)):
-#             if check_unit[i][1] not in units:
-#                 units.append(check_unit[i][1])
-#
-#         return units
-#
-#     def generate_choices(units):
-#         choices = []
-#         for j in range(len(units)):
-#             choices.append((units[j], units[j]))
-#
-#         return choices
-#
-#     print(current_user)
-#     sid = ''
-#     check_unit = db.session.query(student_unit).filter(student_unit.c.student_id == '29036186' ).all()
-#     choices = generate_choices(get_unit(check_unit))
-#     choose_unit = SelectField('Student Unit', choices=choices)
-#     submit = SubmitField('Search')
 
