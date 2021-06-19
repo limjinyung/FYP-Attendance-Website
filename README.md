@@ -20,4 +20,7 @@ to staff by analysing students attendance data.
 | Motherboard                   | Raspberry Pi    |
 | Wireless Communication Tech   | NFC             |
 
+Final Report of the Final Year Project: [IoT based Attendance Website with Data Analytics](https://drive.google.com/file/d/1itw6Fg5OSl6mqXMxmee3iQT7Qi3DCuWV/view?usp=sharing)
+
+Website of the Project: [MAS - Attendance Website](https://attendance-website.herokuapp.com/)
 
