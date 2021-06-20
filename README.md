@@ -19,6 +19,8 @@ to staff by analysing students attendance data.
 | Hosted                        | Heroku          |
 | Motherboard                   | Raspberry Pi    |
 | Wireless Communication Tech   | NFC             |
+| Dashboard API                 | GraphJS         |
+| Table                         | Bootstrap       |
 
 Final Report of the Final Year Project: [IoT based Attendance Website with Data Analytics](https://drive.google.com/file/d/1itw6Fg5OSl6mqXMxmee3iQT7Qi3DCuWV/view?usp=sharing)
 
